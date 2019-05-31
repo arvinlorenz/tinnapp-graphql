@@ -1,11 +1,22 @@
-# source: http://localhost:4466
-# timestamp: Tue Aug 28 2018 14:47:32 GMT-0400 (Eastern Daylight Time)
+# source: http://192.168.99.100:4466/tinapp/dev
+# timestamp: Fri May 31 2019 23:28:29 GMT+0800 (Philippine Standard Time)
 
-type AggregateComment {
+enum AccountType {
+  RETAILER
+  RESELLER
+  CITY_DISTRIBUTOR
+  PROVINCIAL_DISTRIBUTOR
+}
+
+type AggregateOrder {
   count: Int!
 }
 
-type AggregatePost {
+type AggregatePrice {
+  count: Int!
+}
+
+type AggregateProduct {
   count: Int!
 }
 
@@ -18,182 +29,189 @@ type BatchPayload {
   count: Long!
 }
 
-type Comment implements Node {
+scalar DateTime
+
+"""Raw JSON value"""
+scalar Json
+
+"""
+The `Long` scalar type represents non-fractional signed whole numeric values.
+Long can represent values between -(2^63) and 2^63 - 1.
+"""
+scalar Long
+
+type Mutation {
+  createUser(data: UserCreateInput!): User!
+  createOrder(data: OrderCreateInput!): Order!
+  createProduct(data: ProductCreateInput!): Product!
+  createPrice(data: PriceCreateInput!): Price!
+  updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
+  updateOrder(data: OrderUpdateInput!, where: OrderWhereUniqueInput!): Order
+  updateProduct(data: ProductUpdateInput!, where: ProductWhereUniqueInput!): Product
+  updatePrice(data: PriceUpdateInput!, where: PriceWhereUniqueInput!): Price
+  deleteUser(where: UserWhereUniqueInput!): User
+  deleteOrder(where: OrderWhereUniqueInput!): Order
+  deleteProduct(where: ProductWhereUniqueInput!): Product
+  deletePrice(where: PriceWhereUniqueInput!): Price
+  upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
+  upsertOrder(where: OrderWhereUniqueInput!, create: OrderCreateInput!, update: OrderUpdateInput!): Order!
+  upsertProduct(where: ProductWhereUniqueInput!, create: ProductCreateInput!, update: ProductUpdateInput!): Product!
+  upsertPrice(where: PriceWhereUniqueInput!, create: PriceCreateInput!, update: PriceUpdateInput!): Price!
+  updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
+  updateManyOrders(data: OrderUpdateManyMutationInput!, where: OrderWhereInput): BatchPayload!
+  updateManyProducts(data: ProductUpdateManyMutationInput!, where: ProductWhereInput): BatchPayload!
+  updateManyPrices(data: PriceUpdateManyMutationInput!, where: PriceWhereInput): BatchPayload!
+  deleteManyUsers(where: UserWhereInput): BatchPayload!
+  deleteManyOrders(where: OrderWhereInput): BatchPayload!
+  deleteManyProducts(where: ProductWhereInput): BatchPayload!
+  deleteManyPrices(where: PriceWhereInput): BatchPayload!
+  executeRaw(database: PrismaDatabase, query: String!): Json!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+"""An object with an ID"""
+interface Node {
+  """The id of the object."""
   id: ID!
-  text: String!
-  author(where: UserWhereInput): User!
-  post(where: PostWhereInput): Post!
+}
+
+type Order implements Node {
+  id: ID!
+  orderDate: DateTime!
+  purchaseDate: DateTime
+  isPaid: Boolean!
+  shippingFee: Float
+  totalPrice: Float!
+  buyer: User!
+  createdBy: User
+  products(where: ProductWhereInput, orderBy: ProductOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Product!]
   updatedAt: DateTime!
   createdAt: DateTime!
 }
 
 """A connection to a list of items."""
-type CommentConnection {
+type OrderConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
   """A list of edges."""
-  edges: [CommentEdge]!
-  aggregate: AggregateComment!
+  edges: [OrderEdge]!
+  aggregate: AggregateOrder!
 }
 
-input CommentCreateInput {
-  text: String!
-  author: UserCreateOneWithoutCommentsInput!
-  post: PostCreateOneWithoutCommentsInput!
+input OrderCreateInput {
+  id: ID
+  orderDate: DateTime!
+  purchaseDate: DateTime
+  isPaid: Boolean
+  shippingFee: Float
+  totalPrice: Float!
+  buyer: UserCreateOneWithoutOrdersInput!
+  createdBy: UserCreateOneWithoutCreatedOrdersInput
+  products: ProductCreateManyWithoutOrdersInput
 }
 
-input CommentCreateManyWithoutAuthorInput {
-  create: [CommentCreateWithoutAuthorInput!]
-  connect: [CommentWhereUniqueInput!]
+input OrderCreateManyWithoutBuyerInput {
+  create: [OrderCreateWithoutBuyerInput!]
+  connect: [OrderWhereUniqueInput!]
 }
 
-input CommentCreateManyWithoutPostInput {
-  create: [CommentCreateWithoutPostInput!]
-  connect: [CommentWhereUniqueInput!]
+input OrderCreateManyWithoutCreatedByInput {
+  create: [OrderCreateWithoutCreatedByInput!]
+  connect: [OrderWhereUniqueInput!]
 }
 
-input CommentCreateWithoutAuthorInput {
-  text: String!
-  post: PostCreateOneWithoutCommentsInput!
+input OrderCreateManyWithoutProductsInput {
+  create: [OrderCreateWithoutProductsInput!]
+  connect: [OrderWhereUniqueInput!]
 }
 
-input CommentCreateWithoutPostInput {
-  text: String!
-  author: UserCreateOneWithoutCommentsInput!
+input OrderCreateWithoutBuyerInput {
+  id: ID
+  orderDate: DateTime!
+  purchaseDate: DateTime
+  isPaid: Boolean
+  shippingFee: Float
+  totalPrice: Float!
+  createdBy: UserCreateOneWithoutCreatedOrdersInput
+  products: ProductCreateManyWithoutOrdersInput
+}
+
+input OrderCreateWithoutCreatedByInput {
+  id: ID
+  orderDate: DateTime!
+  purchaseDate: DateTime
+  isPaid: Boolean
+  shippingFee: Float
+  totalPrice: Float!
+  buyer: UserCreateOneWithoutOrdersInput!
+  products: ProductCreateManyWithoutOrdersInput
+}
+
+input OrderCreateWithoutProductsInput {
+  id: ID
+  orderDate: DateTime!
+  purchaseDate: DateTime
+  isPaid: Boolean
+  shippingFee: Float
+  totalPrice: Float!
+  buyer: UserCreateOneWithoutOrdersInput!
+  createdBy: UserCreateOneWithoutCreatedOrdersInput
 }
 
 """An edge in a connection."""
-type CommentEdge {
+type OrderEdge {
   """The item at the end of the edge."""
-  node: Comment!
+  node: Order!
 
   """A cursor for use in pagination."""
   cursor: String!
 }
 
-enum CommentOrderByInput {
+enum OrderOrderByInput {
   id_ASC
   id_DESC
-  text_ASC
-  text_DESC
+  orderDate_ASC
+  orderDate_DESC
+  purchaseDate_ASC
+  purchaseDate_DESC
+  isPaid_ASC
+  isPaid_DESC
+  shippingFee_ASC
+  shippingFee_DESC
+  totalPrice_ASC
+  totalPrice_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
 }
 
-type CommentPreviousValues {
+type OrderPreviousValues {
   id: ID!
-  text: String!
+  orderDate: DateTime!
+  purchaseDate: DateTime
+  isPaid: Boolean!
+  shippingFee: Float
+  totalPrice: Float!
   updatedAt: DateTime!
   createdAt: DateTime!
 }
 
-type CommentSubscriptionPayload {
-  mutation: MutationType!
-  node: Comment
-  updatedFields: [String!]
-  previousValues: CommentPreviousValues
-}
-
-input CommentSubscriptionWhereInput {
+input OrderScalarWhereInput {
   """Logical AND on all given filters."""
-  AND: [CommentSubscriptionWhereInput!]
+  AND: [OrderScalarWhereInput!]
 
   """Logical OR on all given filters."""
-  OR: [CommentSubscriptionWhereInput!]
+  OR: [OrderScalarWhereInput!]
 
   """Logical NOT on all given filters combined by AND."""
-  NOT: [CommentSubscriptionWhereInput!]
-
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
-  mutation_in: [MutationType!]
-
-  """
-  The subscription event gets only dispatched when one of the updated fields names is included in this list
-  """
-  updatedFields_contains: String
-
-  """
-  The subscription event gets only dispatched when all of the field names included in this list have been updated
-  """
-  updatedFields_contains_every: [String!]
-
-  """
-  The subscription event gets only dispatched when some of the field names included in this list have been updated
-  """
-  updatedFields_contains_some: [String!]
-  node: CommentWhereInput
-}
-
-input CommentUpdateInput {
-  text: String
-  author: UserUpdateOneWithoutCommentsInput
-  post: PostUpdateOneWithoutCommentsInput
-}
-
-input CommentUpdateManyWithoutAuthorInput {
-  create: [CommentCreateWithoutAuthorInput!]
-  connect: [CommentWhereUniqueInput!]
-  disconnect: [CommentWhereUniqueInput!]
-  delete: [CommentWhereUniqueInput!]
-  update: [CommentUpdateWithWhereUniqueWithoutAuthorInput!]
-  upsert: [CommentUpsertWithWhereUniqueWithoutAuthorInput!]
-}
-
-input CommentUpdateManyWithoutPostInput {
-  create: [CommentCreateWithoutPostInput!]
-  connect: [CommentWhereUniqueInput!]
-  disconnect: [CommentWhereUniqueInput!]
-  delete: [CommentWhereUniqueInput!]
-  update: [CommentUpdateWithWhereUniqueWithoutPostInput!]
-  upsert: [CommentUpsertWithWhereUniqueWithoutPostInput!]
-}
-
-input CommentUpdateWithoutAuthorDataInput {
-  text: String
-  post: PostUpdateOneWithoutCommentsInput
-}
-
-input CommentUpdateWithoutPostDataInput {
-  text: String
-  author: UserUpdateOneWithoutCommentsInput
-}
-
-input CommentUpdateWithWhereUniqueWithoutAuthorInput {
-  where: CommentWhereUniqueInput!
-  data: CommentUpdateWithoutAuthorDataInput!
-}
-
-input CommentUpdateWithWhereUniqueWithoutPostInput {
-  where: CommentWhereUniqueInput!
-  data: CommentUpdateWithoutPostDataInput!
-}
-
-input CommentUpsertWithWhereUniqueWithoutAuthorInput {
-  where: CommentWhereUniqueInput!
-  update: CommentUpdateWithoutAuthorDataInput!
-  create: CommentCreateWithoutAuthorInput!
-}
-
-input CommentUpsertWithWhereUniqueWithoutPostInput {
-  where: CommentWhereUniqueInput!
-  update: CommentUpdateWithoutPostDataInput!
-  create: CommentCreateWithoutPostInput!
-}
-
-input CommentWhereInput {
-  """Logical AND on all given filters."""
-  AND: [CommentWhereInput!]
-
-  """Logical OR on all given filters."""
-  OR: [CommentWhereInput!]
-
-  """Logical NOT on all given filters combined by AND."""
-  NOT: [CommentWhereInput!]
+  NOT: [OrderScalarWhereInput!]
   id: ID
 
   """All values that are not equal to given value."""
@@ -234,46 +252,98 @@ input CommentWhereInput {
 
   """All values not ending with the given string."""
   id_not_ends_with: ID
-  text: String
+  orderDate: DateTime
 
   """All values that are not equal to given value."""
-  text_not: String
+  orderDate_not: DateTime
 
   """All values that are contained in given list."""
-  text_in: [String!]
+  orderDate_in: [DateTime!]
 
   """All values that are not contained in given list."""
-  text_not_in: [String!]
+  orderDate_not_in: [DateTime!]
 
   """All values less than the given value."""
-  text_lt: String
+  orderDate_lt: DateTime
 
   """All values less than or equal the given value."""
-  text_lte: String
+  orderDate_lte: DateTime
 
   """All values greater than the given value."""
-  text_gt: String
+  orderDate_gt: DateTime
 
   """All values greater than or equal the given value."""
-  text_gte: String
+  orderDate_gte: DateTime
+  purchaseDate: DateTime
 
-  """All values containing the given string."""
-  text_contains: String
+  """All values that are not equal to given value."""
+  purchaseDate_not: DateTime
 
-  """All values not containing the given string."""
-  text_not_contains: String
+  """All values that are contained in given list."""
+  purchaseDate_in: [DateTime!]
 
-  """All values starting with the given string."""
-  text_starts_with: String
+  """All values that are not contained in given list."""
+  purchaseDate_not_in: [DateTime!]
 
-  """All values not starting with the given string."""
-  text_not_starts_with: String
+  """All values less than the given value."""
+  purchaseDate_lt: DateTime
 
-  """All values ending with the given string."""
-  text_ends_with: String
+  """All values less than or equal the given value."""
+  purchaseDate_lte: DateTime
 
-  """All values not ending with the given string."""
-  text_not_ends_with: String
+  """All values greater than the given value."""
+  purchaseDate_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  purchaseDate_gte: DateTime
+  isPaid: Boolean
+
+  """All values that are not equal to given value."""
+  isPaid_not: Boolean
+  shippingFee: Float
+
+  """All values that are not equal to given value."""
+  shippingFee_not: Float
+
+  """All values that are contained in given list."""
+  shippingFee_in: [Float!]
+
+  """All values that are not contained in given list."""
+  shippingFee_not_in: [Float!]
+
+  """All values less than the given value."""
+  shippingFee_lt: Float
+
+  """All values less than or equal the given value."""
+  shippingFee_lte: Float
+
+  """All values greater than the given value."""
+  shippingFee_gt: Float
+
+  """All values greater than or equal the given value."""
+  shippingFee_gte: Float
+  totalPrice: Float
+
+  """All values that are not equal to given value."""
+  totalPrice_not: Float
+
+  """All values that are contained in given list."""
+  totalPrice_in: [Float!]
+
+  """All values that are not contained in given list."""
+  totalPrice_not_in: [Float!]
+
+  """All values less than the given value."""
+  totalPrice_lt: Float
+
+  """All values less than or equal the given value."""
+  totalPrice_lte: Float
+
+  """All values greater than the given value."""
+  totalPrice_gt: Float
+
+  """All values greater than or equal the given value."""
+  totalPrice_gte: Float
   updatedAt: DateTime
 
   """All values that are not equal to given value."""
@@ -318,53 +388,370 @@ input CommentWhereInput {
 
   """All values greater than or equal the given value."""
   createdAt_gte: DateTime
-  author: UserWhereInput
-  post: PostWhereInput
 }
 
-input CommentWhereUniqueInput {
+type OrderSubscriptionPayload {
+  mutation: MutationType!
+  node: Order
+  updatedFields: [String!]
+  previousValues: OrderPreviousValues
+}
+
+input OrderSubscriptionWhereInput {
+  """Logical AND on all given filters."""
+  AND: [OrderSubscriptionWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [OrderSubscriptionWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [OrderSubscriptionWhereInput!]
+
+  """The subscription event gets dispatched when it's listed in mutation_in"""
+  mutation_in: [MutationType!]
+
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: OrderWhereInput
+}
+
+input OrderUpdateInput {
+  orderDate: DateTime
+  purchaseDate: DateTime
+  isPaid: Boolean
+  shippingFee: Float
+  totalPrice: Float
+  buyer: UserUpdateOneRequiredWithoutOrdersInput
+  createdBy: UserUpdateOneWithoutCreatedOrdersInput
+  products: ProductUpdateManyWithoutOrdersInput
+}
+
+input OrderUpdateManyDataInput {
+  orderDate: DateTime
+  purchaseDate: DateTime
+  isPaid: Boolean
+  shippingFee: Float
+  totalPrice: Float
+}
+
+input OrderUpdateManyMutationInput {
+  orderDate: DateTime
+  purchaseDate: DateTime
+  isPaid: Boolean
+  shippingFee: Float
+  totalPrice: Float
+}
+
+input OrderUpdateManyWithoutBuyerInput {
+  create: [OrderCreateWithoutBuyerInput!]
+  connect: [OrderWhereUniqueInput!]
+  set: [OrderWhereUniqueInput!]
+  disconnect: [OrderWhereUniqueInput!]
+  delete: [OrderWhereUniqueInput!]
+  update: [OrderUpdateWithWhereUniqueWithoutBuyerInput!]
+  updateMany: [OrderUpdateManyWithWhereNestedInput!]
+  deleteMany: [OrderScalarWhereInput!]
+  upsert: [OrderUpsertWithWhereUniqueWithoutBuyerInput!]
+}
+
+input OrderUpdateManyWithoutCreatedByInput {
+  create: [OrderCreateWithoutCreatedByInput!]
+  connect: [OrderWhereUniqueInput!]
+  set: [OrderWhereUniqueInput!]
+  disconnect: [OrderWhereUniqueInput!]
+  delete: [OrderWhereUniqueInput!]
+  update: [OrderUpdateWithWhereUniqueWithoutCreatedByInput!]
+  updateMany: [OrderUpdateManyWithWhereNestedInput!]
+  deleteMany: [OrderScalarWhereInput!]
+  upsert: [OrderUpsertWithWhereUniqueWithoutCreatedByInput!]
+}
+
+input OrderUpdateManyWithoutProductsInput {
+  create: [OrderCreateWithoutProductsInput!]
+  connect: [OrderWhereUniqueInput!]
+  set: [OrderWhereUniqueInput!]
+  disconnect: [OrderWhereUniqueInput!]
+  delete: [OrderWhereUniqueInput!]
+  update: [OrderUpdateWithWhereUniqueWithoutProductsInput!]
+  updateMany: [OrderUpdateManyWithWhereNestedInput!]
+  deleteMany: [OrderScalarWhereInput!]
+  upsert: [OrderUpsertWithWhereUniqueWithoutProductsInput!]
+}
+
+input OrderUpdateManyWithWhereNestedInput {
+  where: OrderScalarWhereInput!
+  data: OrderUpdateManyDataInput!
+}
+
+input OrderUpdateWithoutBuyerDataInput {
+  orderDate: DateTime
+  purchaseDate: DateTime
+  isPaid: Boolean
+  shippingFee: Float
+  totalPrice: Float
+  createdBy: UserUpdateOneWithoutCreatedOrdersInput
+  products: ProductUpdateManyWithoutOrdersInput
+}
+
+input OrderUpdateWithoutCreatedByDataInput {
+  orderDate: DateTime
+  purchaseDate: DateTime
+  isPaid: Boolean
+  shippingFee: Float
+  totalPrice: Float
+  buyer: UserUpdateOneRequiredWithoutOrdersInput
+  products: ProductUpdateManyWithoutOrdersInput
+}
+
+input OrderUpdateWithoutProductsDataInput {
+  orderDate: DateTime
+  purchaseDate: DateTime
+  isPaid: Boolean
+  shippingFee: Float
+  totalPrice: Float
+  buyer: UserUpdateOneRequiredWithoutOrdersInput
+  createdBy: UserUpdateOneWithoutCreatedOrdersInput
+}
+
+input OrderUpdateWithWhereUniqueWithoutBuyerInput {
+  where: OrderWhereUniqueInput!
+  data: OrderUpdateWithoutBuyerDataInput!
+}
+
+input OrderUpdateWithWhereUniqueWithoutCreatedByInput {
+  where: OrderWhereUniqueInput!
+  data: OrderUpdateWithoutCreatedByDataInput!
+}
+
+input OrderUpdateWithWhereUniqueWithoutProductsInput {
+  where: OrderWhereUniqueInput!
+  data: OrderUpdateWithoutProductsDataInput!
+}
+
+input OrderUpsertWithWhereUniqueWithoutBuyerInput {
+  where: OrderWhereUniqueInput!
+  update: OrderUpdateWithoutBuyerDataInput!
+  create: OrderCreateWithoutBuyerInput!
+}
+
+input OrderUpsertWithWhereUniqueWithoutCreatedByInput {
+  where: OrderWhereUniqueInput!
+  update: OrderUpdateWithoutCreatedByDataInput!
+  create: OrderCreateWithoutCreatedByInput!
+}
+
+input OrderUpsertWithWhereUniqueWithoutProductsInput {
+  where: OrderWhereUniqueInput!
+  update: OrderUpdateWithoutProductsDataInput!
+  create: OrderCreateWithoutProductsInput!
+}
+
+input OrderWhereInput {
+  """Logical AND on all given filters."""
+  AND: [OrderWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [OrderWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [OrderWhereInput!]
   id: ID
+
+  """All values that are not equal to given value."""
+  id_not: ID
+
+  """All values that are contained in given list."""
+  id_in: [ID!]
+
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
+
+  """All values less than the given value."""
+  id_lt: ID
+
+  """All values less than or equal the given value."""
+  id_lte: ID
+
+  """All values greater than the given value."""
+  id_gt: ID
+
+  """All values greater than or equal the given value."""
+  id_gte: ID
+
+  """All values containing the given string."""
+  id_contains: ID
+
+  """All values not containing the given string."""
+  id_not_contains: ID
+
+  """All values starting with the given string."""
+  id_starts_with: ID
+
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
+
+  """All values ending with the given string."""
+  id_ends_with: ID
+
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
+  orderDate: DateTime
+
+  """All values that are not equal to given value."""
+  orderDate_not: DateTime
+
+  """All values that are contained in given list."""
+  orderDate_in: [DateTime!]
+
+  """All values that are not contained in given list."""
+  orderDate_not_in: [DateTime!]
+
+  """All values less than the given value."""
+  orderDate_lt: DateTime
+
+  """All values less than or equal the given value."""
+  orderDate_lte: DateTime
+
+  """All values greater than the given value."""
+  orderDate_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  orderDate_gte: DateTime
+  purchaseDate: DateTime
+
+  """All values that are not equal to given value."""
+  purchaseDate_not: DateTime
+
+  """All values that are contained in given list."""
+  purchaseDate_in: [DateTime!]
+
+  """All values that are not contained in given list."""
+  purchaseDate_not_in: [DateTime!]
+
+  """All values less than the given value."""
+  purchaseDate_lt: DateTime
+
+  """All values less than or equal the given value."""
+  purchaseDate_lte: DateTime
+
+  """All values greater than the given value."""
+  purchaseDate_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  purchaseDate_gte: DateTime
+  isPaid: Boolean
+
+  """All values that are not equal to given value."""
+  isPaid_not: Boolean
+  shippingFee: Float
+
+  """All values that are not equal to given value."""
+  shippingFee_not: Float
+
+  """All values that are contained in given list."""
+  shippingFee_in: [Float!]
+
+  """All values that are not contained in given list."""
+  shippingFee_not_in: [Float!]
+
+  """All values less than the given value."""
+  shippingFee_lt: Float
+
+  """All values less than or equal the given value."""
+  shippingFee_lte: Float
+
+  """All values greater than the given value."""
+  shippingFee_gt: Float
+
+  """All values greater than or equal the given value."""
+  shippingFee_gte: Float
+  totalPrice: Float
+
+  """All values that are not equal to given value."""
+  totalPrice_not: Float
+
+  """All values that are contained in given list."""
+  totalPrice_in: [Float!]
+
+  """All values that are not contained in given list."""
+  totalPrice_not_in: [Float!]
+
+  """All values less than the given value."""
+  totalPrice_lt: Float
+
+  """All values less than or equal the given value."""
+  totalPrice_lte: Float
+
+  """All values greater than the given value."""
+  totalPrice_gt: Float
+
+  """All values greater than or equal the given value."""
+  totalPrice_gte: Float
+  updatedAt: DateTime
+
+  """All values that are not equal to given value."""
+  updatedAt_not: DateTime
+
+  """All values that are contained in given list."""
+  updatedAt_in: [DateTime!]
+
+  """All values that are not contained in given list."""
+  updatedAt_not_in: [DateTime!]
+
+  """All values less than the given value."""
+  updatedAt_lt: DateTime
+
+  """All values less than or equal the given value."""
+  updatedAt_lte: DateTime
+
+  """All values greater than the given value."""
+  updatedAt_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  updatedAt_gte: DateTime
+  createdAt: DateTime
+
+  """All values that are not equal to given value."""
+  createdAt_not: DateTime
+
+  """All values that are contained in given list."""
+  createdAt_in: [DateTime!]
+
+  """All values that are not contained in given list."""
+  createdAt_not_in: [DateTime!]
+
+  """All values less than the given value."""
+  createdAt_lt: DateTime
+
+  """All values less than or equal the given value."""
+  createdAt_lte: DateTime
+
+  """All values greater than the given value."""
+  createdAt_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  createdAt_gte: DateTime
+  buyer: UserWhereInput
+  createdBy: UserWhereInput
+  products_every: ProductWhereInput
+  products_some: ProductWhereInput
+  products_none: ProductWhereInput
 }
 
-scalar DateTime
-
-"""
-The `Long` scalar type represents non-fractional signed whole numeric values.
-Long can represent values between -(2^63) and 2^63 - 1.
-"""
-scalar Long
-
-type Mutation {
-  createUser(data: UserCreateInput!): User!
-  createPost(data: PostCreateInput!): Post!
-  createComment(data: CommentCreateInput!): Comment!
-  updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
-  updatePost(data: PostUpdateInput!, where: PostWhereUniqueInput!): Post
-  updateComment(data: CommentUpdateInput!, where: CommentWhereUniqueInput!): Comment
-  deleteUser(where: UserWhereUniqueInput!): User
-  deletePost(where: PostWhereUniqueInput!): Post
-  deleteComment(where: CommentWhereUniqueInput!): Comment
-  upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
-  upsertPost(where: PostWhereUniqueInput!, create: PostCreateInput!, update: PostUpdateInput!): Post!
-  upsertComment(where: CommentWhereUniqueInput!, create: CommentCreateInput!, update: CommentUpdateInput!): Comment!
-  updateManyUsers(data: UserUpdateInput!, where: UserWhereInput): BatchPayload!
-  updateManyPosts(data: PostUpdateInput!, where: PostWhereInput): BatchPayload!
-  updateManyComments(data: CommentUpdateInput!, where: CommentWhereInput): BatchPayload!
-  deleteManyUsers(where: UserWhereInput): BatchPayload!
-  deleteManyPosts(where: PostWhereInput): BatchPayload!
-  deleteManyComments(where: CommentWhereInput): BatchPayload!
-}
-
-enum MutationType {
-  CREATED
-  UPDATED
-  DELETED
-}
-
-"""An object with an ID"""
-interface Node {
-  """The id of the object."""
-  id: ID!
+input OrderWhereUniqueInput {
+  id: ID
 }
 
 """Information about pagination in a connection."""
@@ -382,112 +769,103 @@ type PageInfo {
   endCursor: String
 }
 
-type Post implements Node {
+type Price implements Node {
   id: ID!
-  title: String!
-  body: String!
-  published: Boolean!
-  author(where: UserWhereInput): User!
-  comments(where: CommentWhereInput, orderBy: CommentOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Comment!]
+  retail: Float!
+  reseller: Float!
+  cityDistributor: Float!
+  provincialDistributor: Float!
+  product: Product
   updatedAt: DateTime!
   createdAt: DateTime!
 }
 
 """A connection to a list of items."""
-type PostConnection {
+type PriceConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
   """A list of edges."""
-  edges: [PostEdge]!
-  aggregate: AggregatePost!
+  edges: [PriceEdge]!
+  aggregate: AggregatePrice!
 }
 
-input PostCreateInput {
-  title: String!
-  body: String!
-  published: Boolean!
-  author: UserCreateOneWithoutPostsInput!
-  comments: CommentCreateManyWithoutPostInput
+input PriceCreateInput {
+  id: ID
+  retail: Float!
+  reseller: Float!
+  cityDistributor: Float!
+  provincialDistributor: Float!
+  product: ProductCreateOneWithoutPriceInput
 }
 
-input PostCreateManyWithoutAuthorInput {
-  create: [PostCreateWithoutAuthorInput!]
-  connect: [PostWhereUniqueInput!]
+input PriceCreateOneWithoutProductInput {
+  create: PriceCreateWithoutProductInput
+  connect: PriceWhereUniqueInput
 }
 
-input PostCreateOneWithoutCommentsInput {
-  create: PostCreateWithoutCommentsInput
-  connect: PostWhereUniqueInput
-}
-
-input PostCreateWithoutAuthorInput {
-  title: String!
-  body: String!
-  published: Boolean!
-  comments: CommentCreateManyWithoutPostInput
-}
-
-input PostCreateWithoutCommentsInput {
-  title: String!
-  body: String!
-  published: Boolean!
-  author: UserCreateOneWithoutPostsInput!
+input PriceCreateWithoutProductInput {
+  id: ID
+  retail: Float!
+  reseller: Float!
+  cityDistributor: Float!
+  provincialDistributor: Float!
 }
 
 """An edge in a connection."""
-type PostEdge {
+type PriceEdge {
   """The item at the end of the edge."""
-  node: Post!
+  node: Price!
 
   """A cursor for use in pagination."""
   cursor: String!
 }
 
-enum PostOrderByInput {
+enum PriceOrderByInput {
   id_ASC
   id_DESC
-  title_ASC
-  title_DESC
-  body_ASC
-  body_DESC
-  published_ASC
-  published_DESC
+  retail_ASC
+  retail_DESC
+  reseller_ASC
+  reseller_DESC
+  cityDistributor_ASC
+  cityDistributor_DESC
+  provincialDistributor_ASC
+  provincialDistributor_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
 }
 
-type PostPreviousValues {
+type PricePreviousValues {
   id: ID!
-  title: String!
-  body: String!
-  published: Boolean!
+  retail: Float!
+  reseller: Float!
+  cityDistributor: Float!
+  provincialDistributor: Float!
   updatedAt: DateTime!
   createdAt: DateTime!
 }
 
-type PostSubscriptionPayload {
+type PriceSubscriptionPayload {
   mutation: MutationType!
-  node: Post
+  node: Price
   updatedFields: [String!]
-  previousValues: PostPreviousValues
+  previousValues: PricePreviousValues
 }
 
-input PostSubscriptionWhereInput {
+input PriceSubscriptionWhereInput {
   """Logical AND on all given filters."""
-  AND: [PostSubscriptionWhereInput!]
+  AND: [PriceSubscriptionWhereInput!]
 
   """Logical OR on all given filters."""
-  OR: [PostSubscriptionWhereInput!]
+  OR: [PriceSubscriptionWhereInput!]
 
   """Logical NOT on all given filters combined by AND."""
-  NOT: [PostSubscriptionWhereInput!]
+  NOT: [PriceSubscriptionWhereInput!]
 
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
+  """The subscription event gets dispatched when it's listed in mutation_in"""
   mutation_in: [MutationType!]
 
   """
@@ -504,73 +882,54 @@ input PostSubscriptionWhereInput {
   The subscription event gets only dispatched when some of the field names included in this list have been updated
   """
   updatedFields_contains_some: [String!]
-  node: PostWhereInput
+  node: PriceWhereInput
 }
 
-input PostUpdateInput {
-  title: String
-  body: String
-  published: Boolean
-  author: UserUpdateOneWithoutPostsInput
-  comments: CommentUpdateManyWithoutPostInput
+input PriceUpdateInput {
+  retail: Float
+  reseller: Float
+  cityDistributor: Float
+  provincialDistributor: Float
+  product: ProductUpdateOneWithoutPriceInput
 }
 
-input PostUpdateManyWithoutAuthorInput {
-  create: [PostCreateWithoutAuthorInput!]
-  connect: [PostWhereUniqueInput!]
-  disconnect: [PostWhereUniqueInput!]
-  delete: [PostWhereUniqueInput!]
-  update: [PostUpdateWithWhereUniqueWithoutAuthorInput!]
-  upsert: [PostUpsertWithWhereUniqueWithoutAuthorInput!]
+input PriceUpdateManyMutationInput {
+  retail: Float
+  reseller: Float
+  cityDistributor: Float
+  provincialDistributor: Float
 }
 
-input PostUpdateOneWithoutCommentsInput {
-  create: PostCreateWithoutCommentsInput
-  connect: PostWhereUniqueInput
+input PriceUpdateOneWithoutProductInput {
+  create: PriceCreateWithoutProductInput
+  connect: PriceWhereUniqueInput
+  disconnect: Boolean
   delete: Boolean
-  update: PostUpdateWithoutCommentsDataInput
-  upsert: PostUpsertWithoutCommentsInput
+  update: PriceUpdateWithoutProductDataInput
+  upsert: PriceUpsertWithoutProductInput
 }
 
-input PostUpdateWithoutAuthorDataInput {
-  title: String
-  body: String
-  published: Boolean
-  comments: CommentUpdateManyWithoutPostInput
+input PriceUpdateWithoutProductDataInput {
+  retail: Float
+  reseller: Float
+  cityDistributor: Float
+  provincialDistributor: Float
 }
 
-input PostUpdateWithoutCommentsDataInput {
-  title: String
-  body: String
-  published: Boolean
-  author: UserUpdateOneWithoutPostsInput
+input PriceUpsertWithoutProductInput {
+  update: PriceUpdateWithoutProductDataInput!
+  create: PriceCreateWithoutProductInput!
 }
 
-input PostUpdateWithWhereUniqueWithoutAuthorInput {
-  where: PostWhereUniqueInput!
-  data: PostUpdateWithoutAuthorDataInput!
-}
-
-input PostUpsertWithoutCommentsInput {
-  update: PostUpdateWithoutCommentsDataInput!
-  create: PostCreateWithoutCommentsInput!
-}
-
-input PostUpsertWithWhereUniqueWithoutAuthorInput {
-  where: PostWhereUniqueInput!
-  update: PostUpdateWithoutAuthorDataInput!
-  create: PostCreateWithoutAuthorInput!
-}
-
-input PostWhereInput {
+input PriceWhereInput {
   """Logical AND on all given filters."""
-  AND: [PostWhereInput!]
+  AND: [PriceWhereInput!]
 
   """Logical OR on all given filters."""
-  OR: [PostWhereInput!]
+  OR: [PriceWhereInput!]
 
   """Logical NOT on all given filters combined by AND."""
-  NOT: [PostWhereInput!]
+  NOT: [PriceWhereInput!]
   id: ID
 
   """All values that are not equal to given value."""
@@ -611,90 +970,94 @@ input PostWhereInput {
 
   """All values not ending with the given string."""
   id_not_ends_with: ID
-  title: String
+  retail: Float
 
   """All values that are not equal to given value."""
-  title_not: String
+  retail_not: Float
 
   """All values that are contained in given list."""
-  title_in: [String!]
+  retail_in: [Float!]
 
   """All values that are not contained in given list."""
-  title_not_in: [String!]
+  retail_not_in: [Float!]
 
   """All values less than the given value."""
-  title_lt: String
+  retail_lt: Float
 
   """All values less than or equal the given value."""
-  title_lte: String
+  retail_lte: Float
 
   """All values greater than the given value."""
-  title_gt: String
+  retail_gt: Float
 
   """All values greater than or equal the given value."""
-  title_gte: String
-
-  """All values containing the given string."""
-  title_contains: String
-
-  """All values not containing the given string."""
-  title_not_contains: String
-
-  """All values starting with the given string."""
-  title_starts_with: String
-
-  """All values not starting with the given string."""
-  title_not_starts_with: String
-
-  """All values ending with the given string."""
-  title_ends_with: String
-
-  """All values not ending with the given string."""
-  title_not_ends_with: String
-  body: String
+  retail_gte: Float
+  reseller: Float
 
   """All values that are not equal to given value."""
-  body_not: String
+  reseller_not: Float
 
   """All values that are contained in given list."""
-  body_in: [String!]
+  reseller_in: [Float!]
 
   """All values that are not contained in given list."""
-  body_not_in: [String!]
+  reseller_not_in: [Float!]
 
   """All values less than the given value."""
-  body_lt: String
+  reseller_lt: Float
 
   """All values less than or equal the given value."""
-  body_lte: String
+  reseller_lte: Float
 
   """All values greater than the given value."""
-  body_gt: String
+  reseller_gt: Float
 
   """All values greater than or equal the given value."""
-  body_gte: String
-
-  """All values containing the given string."""
-  body_contains: String
-
-  """All values not containing the given string."""
-  body_not_contains: String
-
-  """All values starting with the given string."""
-  body_starts_with: String
-
-  """All values not starting with the given string."""
-  body_not_starts_with: String
-
-  """All values ending with the given string."""
-  body_ends_with: String
-
-  """All values not ending with the given string."""
-  body_not_ends_with: String
-  published: Boolean
+  reseller_gte: Float
+  cityDistributor: Float
 
   """All values that are not equal to given value."""
-  published_not: Boolean
+  cityDistributor_not: Float
+
+  """All values that are contained in given list."""
+  cityDistributor_in: [Float!]
+
+  """All values that are not contained in given list."""
+  cityDistributor_not_in: [Float!]
+
+  """All values less than the given value."""
+  cityDistributor_lt: Float
+
+  """All values less than or equal the given value."""
+  cityDistributor_lte: Float
+
+  """All values greater than the given value."""
+  cityDistributor_gt: Float
+
+  """All values greater than or equal the given value."""
+  cityDistributor_gte: Float
+  provincialDistributor: Float
+
+  """All values that are not equal to given value."""
+  provincialDistributor_not: Float
+
+  """All values that are contained in given list."""
+  provincialDistributor_in: [Float!]
+
+  """All values that are not contained in given list."""
+  provincialDistributor_not_in: [Float!]
+
+  """All values less than the given value."""
+  provincialDistributor_lt: Float
+
+  """All values less than or equal the given value."""
+  provincialDistributor_lte: Float
+
+  """All values greater than the given value."""
+  provincialDistributor_gt: Float
+
+  """All values greater than or equal the given value."""
+  provincialDistributor_gte: Float
   updatedAt: DateTime
 
   """All values that are not equal to given value."""
@@ -739,26 +1102,690 @@ input PostWhereInput {
 
   """All values greater than or equal the given value."""
   createdAt_gte: DateTime
-  author: UserWhereInput
-  comments_every: CommentWhereInput
-  comments_some: CommentWhereInput
-  comments_none: CommentWhereInput
+  product: ProductWhereInput
 }
 
-input PostWhereUniqueInput {
+input PriceWhereUniqueInput {
+  id: ID
+}
+
+enum PrismaDatabase {
+  default
+}
+
+type Product implements Node {
+  id: ID!
+  name: String!
+  code: String!
+  available: Int!
+  expDate: DateTime
+  orders(where: OrderWhereInput, orderBy: OrderOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Order!]
+  price: Price
+  updatedAt: DateTime!
+  createdAt: DateTime!
+}
+
+"""A connection to a list of items."""
+type ProductConnection {
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """A list of edges."""
+  edges: [ProductEdge]!
+  aggregate: AggregateProduct!
+}
+
+input ProductCreateInput {
+  id: ID
+  name: String!
+  code: String!
+  available: Int!
+  expDate: DateTime
+  orders: OrderCreateManyWithoutProductsInput
+  price: PriceCreateOneWithoutProductInput
+}
+
+input ProductCreateManyWithoutOrdersInput {
+  create: [ProductCreateWithoutOrdersInput!]
+  connect: [ProductWhereUniqueInput!]
+}
+
+input ProductCreateOneWithoutPriceInput {
+  create: ProductCreateWithoutPriceInput
+  connect: ProductWhereUniqueInput
+}
+
+input ProductCreateWithoutOrdersInput {
+  id: ID
+  name: String!
+  code: String!
+  available: Int!
+  expDate: DateTime
+  price: PriceCreateOneWithoutProductInput
+}
+
+input ProductCreateWithoutPriceInput {
+  id: ID
+  name: String!
+  code: String!
+  available: Int!
+  expDate: DateTime
+  orders: OrderCreateManyWithoutProductsInput
+}
+
+"""An edge in a connection."""
+type ProductEdge {
+  """The item at the end of the edge."""
+  node: Product!
+
+  """A cursor for use in pagination."""
+  cursor: String!
+}
+
+enum ProductOrderByInput {
+  id_ASC
+  id_DESC
+  name_ASC
+  name_DESC
+  code_ASC
+  code_DESC
+  available_ASC
+  available_DESC
+  expDate_ASC
+  expDate_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type ProductPreviousValues {
+  id: ID!
+  name: String!
+  code: String!
+  available: Int!
+  expDate: DateTime
+  updatedAt: DateTime!
+  createdAt: DateTime!
+}
+
+input ProductScalarWhereInput {
+  """Logical AND on all given filters."""
+  AND: [ProductScalarWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [ProductScalarWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [ProductScalarWhereInput!]
+  id: ID
+
+  """All values that are not equal to given value."""
+  id_not: ID
+
+  """All values that are contained in given list."""
+  id_in: [ID!]
+
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
+
+  """All values less than the given value."""
+  id_lt: ID
+
+  """All values less than or equal the given value."""
+  id_lte: ID
+
+  """All values greater than the given value."""
+  id_gt: ID
+
+  """All values greater than or equal the given value."""
+  id_gte: ID
+
+  """All values containing the given string."""
+  id_contains: ID
+
+  """All values not containing the given string."""
+  id_not_contains: ID
+
+  """All values starting with the given string."""
+  id_starts_with: ID
+
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
+
+  """All values ending with the given string."""
+  id_ends_with: ID
+
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
+  name: String
+
+  """All values that are not equal to given value."""
+  name_not: String
+
+  """All values that are contained in given list."""
+  name_in: [String!]
+
+  """All values that are not contained in given list."""
+  name_not_in: [String!]
+
+  """All values less than the given value."""
+  name_lt: String
+
+  """All values less than or equal the given value."""
+  name_lte: String
+
+  """All values greater than the given value."""
+  name_gt: String
+
+  """All values greater than or equal the given value."""
+  name_gte: String
+
+  """All values containing the given string."""
+  name_contains: String
+
+  """All values not containing the given string."""
+  name_not_contains: String
+
+  """All values starting with the given string."""
+  name_starts_with: String
+
+  """All values not starting with the given string."""
+  name_not_starts_with: String
+
+  """All values ending with the given string."""
+  name_ends_with: String
+
+  """All values not ending with the given string."""
+  name_not_ends_with: String
+  code: String
+
+  """All values that are not equal to given value."""
+  code_not: String
+
+  """All values that are contained in given list."""
+  code_in: [String!]
+
+  """All values that are not contained in given list."""
+  code_not_in: [String!]
+
+  """All values less than the given value."""
+  code_lt: String
+
+  """All values less than or equal the given value."""
+  code_lte: String
+
+  """All values greater than the given value."""
+  code_gt: String
+
+  """All values greater than or equal the given value."""
+  code_gte: String
+
+  """All values containing the given string."""
+  code_contains: String
+
+  """All values not containing the given string."""
+  code_not_contains: String
+
+  """All values starting with the given string."""
+  code_starts_with: String
+
+  """All values not starting with the given string."""
+  code_not_starts_with: String
+
+  """All values ending with the given string."""
+  code_ends_with: String
+
+  """All values not ending with the given string."""
+  code_not_ends_with: String
+  available: Int
+
+  """All values that are not equal to given value."""
+  available_not: Int
+
+  """All values that are contained in given list."""
+  available_in: [Int!]
+
+  """All values that are not contained in given list."""
+  available_not_in: [Int!]
+
+  """All values less than the given value."""
+  available_lt: Int
+
+  """All values less than or equal the given value."""
+  available_lte: Int
+
+  """All values greater than the given value."""
+  available_gt: Int
+
+  """All values greater than or equal the given value."""
+  available_gte: Int
+  expDate: DateTime
+
+  """All values that are not equal to given value."""
+  expDate_not: DateTime
+
+  """All values that are contained in given list."""
+  expDate_in: [DateTime!]
+
+  """All values that are not contained in given list."""
+  expDate_not_in: [DateTime!]
+
+  """All values less than the given value."""
+  expDate_lt: DateTime
+
+  """All values less than or equal the given value."""
+  expDate_lte: DateTime
+
+  """All values greater than the given value."""
+  expDate_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  expDate_gte: DateTime
+  updatedAt: DateTime
+
+  """All values that are not equal to given value."""
+  updatedAt_not: DateTime
+
+  """All values that are contained in given list."""
+  updatedAt_in: [DateTime!]
+
+  """All values that are not contained in given list."""
+  updatedAt_not_in: [DateTime!]
+
+  """All values less than the given value."""
+  updatedAt_lt: DateTime
+
+  """All values less than or equal the given value."""
+  updatedAt_lte: DateTime
+
+  """All values greater than the given value."""
+  updatedAt_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  updatedAt_gte: DateTime
+  createdAt: DateTime
+
+  """All values that are not equal to given value."""
+  createdAt_not: DateTime
+
+  """All values that are contained in given list."""
+  createdAt_in: [DateTime!]
+
+  """All values that are not contained in given list."""
+  createdAt_not_in: [DateTime!]
+
+  """All values less than the given value."""
+  createdAt_lt: DateTime
+
+  """All values less than or equal the given value."""
+  createdAt_lte: DateTime
+
+  """All values greater than the given value."""
+  createdAt_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  createdAt_gte: DateTime
+}
+
+type ProductSubscriptionPayload {
+  mutation: MutationType!
+  node: Product
+  updatedFields: [String!]
+  previousValues: ProductPreviousValues
+}
+
+input ProductSubscriptionWhereInput {
+  """Logical AND on all given filters."""
+  AND: [ProductSubscriptionWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [ProductSubscriptionWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [ProductSubscriptionWhereInput!]
+
+  """The subscription event gets dispatched when it's listed in mutation_in"""
+  mutation_in: [MutationType!]
+
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: ProductWhereInput
+}
+
+input ProductUpdateInput {
+  name: String
+  code: String
+  available: Int
+  expDate: DateTime
+  orders: OrderUpdateManyWithoutProductsInput
+  price: PriceUpdateOneWithoutProductInput
+}
+
+input ProductUpdateManyDataInput {
+  name: String
+  code: String
+  available: Int
+  expDate: DateTime
+}
+
+input ProductUpdateManyMutationInput {
+  name: String
+  code: String
+  available: Int
+  expDate: DateTime
+}
+
+input ProductUpdateManyWithoutOrdersInput {
+  create: [ProductCreateWithoutOrdersInput!]
+  connect: [ProductWhereUniqueInput!]
+  set: [ProductWhereUniqueInput!]
+  disconnect: [ProductWhereUniqueInput!]
+  delete: [ProductWhereUniqueInput!]
+  update: [ProductUpdateWithWhereUniqueWithoutOrdersInput!]
+  updateMany: [ProductUpdateManyWithWhereNestedInput!]
+  deleteMany: [ProductScalarWhereInput!]
+  upsert: [ProductUpsertWithWhereUniqueWithoutOrdersInput!]
+}
+
+input ProductUpdateManyWithWhereNestedInput {
+  where: ProductScalarWhereInput!
+  data: ProductUpdateManyDataInput!
+}
+
+input ProductUpdateOneWithoutPriceInput {
+  create: ProductCreateWithoutPriceInput
+  connect: ProductWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: ProductUpdateWithoutPriceDataInput
+  upsert: ProductUpsertWithoutPriceInput
+}
+
+input ProductUpdateWithoutOrdersDataInput {
+  name: String
+  code: String
+  available: Int
+  expDate: DateTime
+  price: PriceUpdateOneWithoutProductInput
+}
+
+input ProductUpdateWithoutPriceDataInput {
+  name: String
+  code: String
+  available: Int
+  expDate: DateTime
+  orders: OrderUpdateManyWithoutProductsInput
+}
+
+input ProductUpdateWithWhereUniqueWithoutOrdersInput {
+  where: ProductWhereUniqueInput!
+  data: ProductUpdateWithoutOrdersDataInput!
+}
+
+input ProductUpsertWithoutPriceInput {
+  update: ProductUpdateWithoutPriceDataInput!
+  create: ProductCreateWithoutPriceInput!
+}
+
+input ProductUpsertWithWhereUniqueWithoutOrdersInput {
+  where: ProductWhereUniqueInput!
+  update: ProductUpdateWithoutOrdersDataInput!
+  create: ProductCreateWithoutOrdersInput!
+}
+
+input ProductWhereInput {
+  """Logical AND on all given filters."""
+  AND: [ProductWhereInput!]
+
+  """Logical OR on all given filters."""
+  OR: [ProductWhereInput!]
+
+  """Logical NOT on all given filters combined by AND."""
+  NOT: [ProductWhereInput!]
+  id: ID
+
+  """All values that are not equal to given value."""
+  id_not: ID
+
+  """All values that are contained in given list."""
+  id_in: [ID!]
+
+  """All values that are not contained in given list."""
+  id_not_in: [ID!]
+
+  """All values less than the given value."""
+  id_lt: ID
+
+  """All values less than or equal the given value."""
+  id_lte: ID
+
+  """All values greater than the given value."""
+  id_gt: ID
+
+  """All values greater than or equal the given value."""
+  id_gte: ID
+
+  """All values containing the given string."""
+  id_contains: ID
+
+  """All values not containing the given string."""
+  id_not_contains: ID
+
+  """All values starting with the given string."""
+  id_starts_with: ID
+
+  """All values not starting with the given string."""
+  id_not_starts_with: ID
+
+  """All values ending with the given string."""
+  id_ends_with: ID
+
+  """All values not ending with the given string."""
+  id_not_ends_with: ID
+  name: String
+
+  """All values that are not equal to given value."""
+  name_not: String
+
+  """All values that are contained in given list."""
+  name_in: [String!]
+
+  """All values that are not contained in given list."""
+  name_not_in: [String!]
+
+  """All values less than the given value."""
+  name_lt: String
+
+  """All values less than or equal the given value."""
+  name_lte: String
+
+  """All values greater than the given value."""
+  name_gt: String
+
+  """All values greater than or equal the given value."""
+  name_gte: String
+
+  """All values containing the given string."""
+  name_contains: String
+
+  """All values not containing the given string."""
+  name_not_contains: String
+
+  """All values starting with the given string."""
+  name_starts_with: String
+
+  """All values not starting with the given string."""
+  name_not_starts_with: String
+
+  """All values ending with the given string."""
+  name_ends_with: String
+
+  """All values not ending with the given string."""
+  name_not_ends_with: String
+  code: String
+
+  """All values that are not equal to given value."""
+  code_not: String
+
+  """All values that are contained in given list."""
+  code_in: [String!]
+
+  """All values that are not contained in given list."""
+  code_not_in: [String!]
+
+  """All values less than the given value."""
+  code_lt: String
+
+  """All values less than or equal the given value."""
+  code_lte: String
+
+  """All values greater than the given value."""
+  code_gt: String
+
+  """All values greater than or equal the given value."""
+  code_gte: String
+
+  """All values containing the given string."""
+  code_contains: String
+
+  """All values not containing the given string."""
+  code_not_contains: String
+
+  """All values starting with the given string."""
+  code_starts_with: String
+
+  """All values not starting with the given string."""
+  code_not_starts_with: String
+
+  """All values ending with the given string."""
+  code_ends_with: String
+
+  """All values not ending with the given string."""
+  code_not_ends_with: String
+  available: Int
+
+  """All values that are not equal to given value."""
+  available_not: Int
+
+  """All values that are contained in given list."""
+  available_in: [Int!]
+
+  """All values that are not contained in given list."""
+  available_not_in: [Int!]
+
+  """All values less than the given value."""
+  available_lt: Int
+
+  """All values less than or equal the given value."""
+  available_lte: Int
+
+  """All values greater than the given value."""
+  available_gt: Int
+
+  """All values greater than or equal the given value."""
+  available_gte: Int
+  expDate: DateTime
+
+  """All values that are not equal to given value."""
+  expDate_not: DateTime
+
+  """All values that are contained in given list."""
+  expDate_in: [DateTime!]
+
+  """All values that are not contained in given list."""
+  expDate_not_in: [DateTime!]
+
+  """All values less than the given value."""
+  expDate_lt: DateTime
+
+  """All values less than or equal the given value."""
+  expDate_lte: DateTime
+
+  """All values greater than the given value."""
+  expDate_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  expDate_gte: DateTime
+  updatedAt: DateTime
+
+  """All values that are not equal to given value."""
+  updatedAt_not: DateTime
+
+  """All values that are contained in given list."""
+  updatedAt_in: [DateTime!]
+
+  """All values that are not contained in given list."""
+  updatedAt_not_in: [DateTime!]
+
+  """All values less than the given value."""
+  updatedAt_lt: DateTime
+
+  """All values less than or equal the given value."""
+  updatedAt_lte: DateTime
+
+  """All values greater than the given value."""
+  updatedAt_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  updatedAt_gte: DateTime
+  createdAt: DateTime
+
+  """All values that are not equal to given value."""
+  createdAt_not: DateTime
+
+  """All values that are contained in given list."""
+  createdAt_in: [DateTime!]
+
+  """All values that are not contained in given list."""
+  createdAt_not_in: [DateTime!]
+
+  """All values less than the given value."""
+  createdAt_lt: DateTime
+
+  """All values less than or equal the given value."""
+  createdAt_lte: DateTime
+
+  """All values greater than the given value."""
+  createdAt_gt: DateTime
+
+  """All values greater than or equal the given value."""
+  createdAt_gte: DateTime
+  orders_every: OrderWhereInput
+  orders_some: OrderWhereInput
+  orders_none: OrderWhereInput
+  price: PriceWhereInput
+}
+
+input ProductWhereUniqueInput {
   id: ID
 }
 
 type Query {
   users(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User]!
-  posts(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post]!
-  comments(where: CommentWhereInput, orderBy: CommentOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Comment]!
+  orders(where: OrderWhereInput, orderBy: OrderOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Order]!
+  products(where: ProductWhereInput, orderBy: ProductOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Product]!
+  prices(where: PriceWhereInput, orderBy: PriceOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Price]!
   user(where: UserWhereUniqueInput!): User
-  post(where: PostWhereUniqueInput!): Post
-  comment(where: CommentWhereUniqueInput!): Comment
+  order(where: OrderWhereUniqueInput!): Order
+  product(where: ProductWhereUniqueInput!): Product
+  price(where: PriceWhereUniqueInput!): Price
   usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
-  postsConnection(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostConnection!
-  commentsConnection(where: CommentWhereInput, orderBy: CommentOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CommentConnection!
+  ordersConnection(where: OrderWhereInput, orderBy: OrderOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OrderConnection!
+  productsConnection(where: ProductWhereInput, orderBy: ProductOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): ProductConnection!
+  pricesConnection(where: PriceWhereInput, orderBy: PriceOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PriceConnection!
 
   """Fetches an object given its ID"""
   node(
@@ -769,8 +1796,9 @@ type Query {
 
 type Subscription {
   user(where: UserSubscriptionWhereInput): UserSubscriptionPayload
-  post(where: PostSubscriptionWhereInput): PostSubscriptionPayload
-  comment(where: CommentSubscriptionWhereInput): CommentSubscriptionPayload
+  order(where: OrderSubscriptionWhereInput): OrderSubscriptionPayload
+  product(where: ProductSubscriptionWhereInput): ProductSubscriptionPayload
+  price(where: PriceSubscriptionWhereInput): PriceSubscriptionPayload
 }
 
 type User implements Node {
@@ -778,8 +1806,9 @@ type User implements Node {
   name: String!
   email: String!
   password: String!
-  posts(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post!]
-  comments(where: CommentWhereInput, orderBy: CommentOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Comment!]
+  accountType: AccountType
+  orders(where: OrderWhereInput, orderBy: OrderOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Order!]
+  createdOrders(where: OrderWhereInput, orderBy: OrderOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Order!]
   updatedAt: DateTime!
   createdAt: DateTime!
 }
@@ -795,35 +1824,41 @@ type UserConnection {
 }
 
 input UserCreateInput {
+  id: ID
   name: String!
   email: String!
   password: String!
-  posts: PostCreateManyWithoutAuthorInput
-  comments: CommentCreateManyWithoutAuthorInput
+  accountType: AccountType
+  orders: OrderCreateManyWithoutBuyerInput
+  createdOrders: OrderCreateManyWithoutCreatedByInput
 }
 
-input UserCreateOneWithoutCommentsInput {
-  create: UserCreateWithoutCommentsInput
+input UserCreateOneWithoutCreatedOrdersInput {
+  create: UserCreateWithoutCreatedOrdersInput
   connect: UserWhereUniqueInput
 }
 
-input UserCreateOneWithoutPostsInput {
-  create: UserCreateWithoutPostsInput
+input UserCreateOneWithoutOrdersInput {
+  create: UserCreateWithoutOrdersInput
   connect: UserWhereUniqueInput
 }
 
-input UserCreateWithoutCommentsInput {
+input UserCreateWithoutCreatedOrdersInput {
+  id: ID
   name: String!
   email: String!
   password: String!
-  posts: PostCreateManyWithoutAuthorInput
+  accountType: AccountType
+  orders: OrderCreateManyWithoutBuyerInput
 }
 
-input UserCreateWithoutPostsInput {
+input UserCreateWithoutOrdersInput {
+  id: ID
   name: String!
   email: String!
   password: String!
-  comments: CommentCreateManyWithoutAuthorInput
+  accountType: AccountType
+  createdOrders: OrderCreateManyWithoutCreatedByInput
 }
 
 """An edge in a connection."""
@@ -844,6 +1879,8 @@ enum UserOrderByInput {
   email_DESC
   password_ASC
   password_DESC
+  accountType_ASC
+  accountType_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
@@ -855,6 +1892,7 @@ type UserPreviousValues {
   name: String!
   email: String!
   password: String!
+  accountType: AccountType
   updatedAt: DateTime!
   createdAt: DateTime!
 }
@@ -876,9 +1914,7 @@ input UserSubscriptionWhereInput {
   """Logical NOT on all given filters combined by AND."""
   NOT: [UserSubscriptionWhereInput!]
 
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
+  """The subscription event gets dispatched when it's listed in mutation_in"""
   mutation_in: [MutationType!]
 
   """
@@ -902,48 +1938,58 @@ input UserUpdateInput {
   name: String
   email: String
   password: String
-  posts: PostUpdateManyWithoutAuthorInput
-  comments: CommentUpdateManyWithoutAuthorInput
+  accountType: AccountType
+  orders: OrderUpdateManyWithoutBuyerInput
+  createdOrders: OrderUpdateManyWithoutCreatedByInput
 }
 
-input UserUpdateOneWithoutCommentsInput {
-  create: UserCreateWithoutCommentsInput
-  connect: UserWhereUniqueInput
-  delete: Boolean
-  update: UserUpdateWithoutCommentsDataInput
-  upsert: UserUpsertWithoutCommentsInput
-}
-
-input UserUpdateOneWithoutPostsInput {
-  create: UserCreateWithoutPostsInput
-  connect: UserWhereUniqueInput
-  delete: Boolean
-  update: UserUpdateWithoutPostsDataInput
-  upsert: UserUpsertWithoutPostsInput
-}
-
-input UserUpdateWithoutCommentsDataInput {
+input UserUpdateManyMutationInput {
   name: String
   email: String
   password: String
-  posts: PostUpdateManyWithoutAuthorInput
+  accountType: AccountType
 }
 
-input UserUpdateWithoutPostsDataInput {
+input UserUpdateOneRequiredWithoutOrdersInput {
+  create: UserCreateWithoutOrdersInput
+  connect: UserWhereUniqueInput
+  update: UserUpdateWithoutOrdersDataInput
+  upsert: UserUpsertWithoutOrdersInput
+}
+
+input UserUpdateOneWithoutCreatedOrdersInput {
+  create: UserCreateWithoutCreatedOrdersInput
+  connect: UserWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: UserUpdateWithoutCreatedOrdersDataInput
+  upsert: UserUpsertWithoutCreatedOrdersInput
+}
+
+input UserUpdateWithoutCreatedOrdersDataInput {
   name: String
   email: String
   password: String
-  comments: CommentUpdateManyWithoutAuthorInput
+  accountType: AccountType
+  orders: OrderUpdateManyWithoutBuyerInput
 }
 
-input UserUpsertWithoutCommentsInput {
-  update: UserUpdateWithoutCommentsDataInput!
-  create: UserCreateWithoutCommentsInput!
+input UserUpdateWithoutOrdersDataInput {
+  name: String
+  email: String
+  password: String
+  accountType: AccountType
+  createdOrders: OrderUpdateManyWithoutCreatedByInput
 }
 
-input UserUpsertWithoutPostsInput {
-  update: UserUpdateWithoutPostsDataInput!
-  create: UserCreateWithoutPostsInput!
+input UserUpsertWithoutCreatedOrdersInput {
+  update: UserUpdateWithoutCreatedOrdersDataInput!
+  create: UserCreateWithoutCreatedOrdersInput!
+}
+
+input UserUpsertWithoutOrdersInput {
+  update: UserUpdateWithoutOrdersDataInput!
+  create: UserCreateWithoutOrdersInput!
 }
 
 input UserWhereInput {
@@ -1115,6 +2161,16 @@ input UserWhereInput {
 
   """All values not ending with the given string."""
   password_not_ends_with: String
+  accountType: AccountType
+
+  """All values that are not equal to given value."""
+  accountType_not: AccountType
+
+  """All values that are contained in given list."""
+  accountType_in: [AccountType!]
+
+  """All values that are not contained in given list."""
+  accountType_not_in: [AccountType!]
   updatedAt: DateTime
 
   """All values that are not equal to given value."""
@@ -1159,12 +2215,12 @@ input UserWhereInput {
 
   """All values greater than or equal the given value."""
   createdAt_gte: DateTime
-  posts_every: PostWhereInput
-  posts_some: PostWhereInput
-  posts_none: PostWhereInput
-  comments_every: CommentWhereInput
-  comments_some: CommentWhereInput
-  comments_none: CommentWhereInput
+  orders_every: OrderWhereInput
+  orders_some: OrderWhereInput
+  orders_none: OrderWhereInput
+  createdOrders_every: OrderWhereInput
+  createdOrders_some: OrderWhereInput
+  createdOrders_none: OrderWhereInput
 }
 
 input UserWhereUniqueInput {

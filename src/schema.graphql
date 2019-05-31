@@ -1,8 +1,11 @@
-# import UserOrderByInput from './generated/prisma.graphql'
+# import UserOrderByInput, AccountType, OrderOrderByInput, ProductOrderByInput from './generated/prisma.graphql'
 
 type Query {
     users(query: String, first: Int, skip: Int, after: String, orderBy: UserOrderByInput): [User!]!
     me: User!
+
+    orders(isPaid: Boolean, first: Int, skip: Int, after: String, orderBy: OrderOrderByInput): [Order!]!
+    products(query: String, first: Int, skip: Int, after: String, orderBy: ProductOrderByInput): [Product!]!
 }
 
 type Mutation {
@@ -10,6 +13,14 @@ type Mutation {
     login(data: LoginUserInput!): AuthPayload!
     deleteUser: User!
     updateUser(data: UpdateUserInput!): User!
+
+    createOrder(data: CreateOrderInput!): Order!
+    updateOrder(id: ID!, data: UpdateOrderInput!): Order!
+    deleteOrder(id: ID!): Order!
+    processOrder(id: ID!, purchaseDate: DateTime!): Order!
+    
+    createProduct(data: CreateProductInput): Product
+    deleteProduct(id: ID!): Product!
 }
 
 # type Subscription {
@@ -25,6 +36,7 @@ input CreateUserInput {
     name: String!
     email: String!
     password: String!
+    accountType: AccountType!
 }
 
 input LoginUserInput {
@@ -43,12 +55,84 @@ type User {
     name: String!
     email: String
     password: String!
+    accountType: AccountType!
+    orders: [Order!]!
+    createdOrders: [Order!]!
     updatedAt: String!
     createdAt: String!
 }
+
+input CreateOrderInput{
+    orderDate: DateTime!
+    purchaseDate: DateTime
+    isPaid: Boolean
+    totalPrice: Float!
+    shippingFee: Float
+    buyer: ID!
+    products: [ID!]!
+}
+
+input UpdateOrderInput{
+    totalPrice: Float
+    shippingFee: Float
+    products: [ID!]
+}
+
+
+
+input CreateProductInput {
+  name: String!
+  code: String!
+  available: Int!
+  expDate: DateTime
+  price: CreatePriceInput!
+}
+
+input CreatePriceInput{
+  retail: Float!
+  reseller: Float!
+  cityDistributor: Float!
+  provincialDistributor: Float!
+}
+
+type Order{
+  id: ID! 
+  orderDate: DateTime!
+  purchaseDate: DateTime
+  isPaid: Boolean!
+  totalPrice: Float!
+  shippingFee: Float
+  buyer: User!
+  createdBy: User!
+  products: [Product!]!
+  updatedAt: String!
+  createdAt: String!
+}
+
+
+type Product{
+  id: ID!
+  name: String!
+  code: String!
+  available: Int!
+  expDate: DateTime
+  orders: [Order!]!
+  price: Price
+  updatedAt: String! 
+  createdAt: String!  
+}
+
 
 enum MutationType {
     CREATED
     UPDATED
     DELETED
+}
+
+
+enum AccountType{
+  RETAILER
+  RESELLER
+  CITY_DISTRIBUTOR
+  PROVINCIAL_DISTRIBUTOR
 }
