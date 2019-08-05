@@ -1,26 +1,36 @@
-# import UserOrderByInput, AccountType, OrderOrderByInput, ProductOrderByInput from './generated/prisma.graphql'
+# import UserOrderByInput, AccountType, OrderOrderByInput, ProductOrderByInput, CategoryOrderByInput from './generated/prisma.graphql'
 
 type Query {
     users(query: String, first: Int, skip: Int, after: String, orderBy: UserOrderByInput): [User!]!
+    user(id: ID!): User!
     me: User!
 
     orders(isPaid: Boolean, first: Int, skip: Int, after: String, orderBy: OrderOrderByInput): [Order!]!
+    order(id: ID!): Order!
     products(query: String, first: Int, skip: Int, after: String, orderBy: ProductOrderByInput): [Product!]!
+    product(id: ID!): Product!
+    categories(query: String, first: Int, skip: Int, after: String, orderBy: CategoryOrderByInput): [Category!]!
+    category(id: ID!): Category!
 }
 
 type Mutation {
     createUser(data: CreateUserInput!): AuthPayload!
     login(data: LoginUserInput!): AuthPayload!
     deleteUser: User!
-    updateUser(data: UpdateUserInput!): User!
+    updateUser(id: ID, data: UpdateUserInput!): User!
 
     createOrder(data: CreateOrderInput!): Order!
     updateOrder(id: ID!, data: UpdateOrderInput!): Order!
-    deleteOrder(id: ID!): Order!
+    deleteOrder(id: ID!, orderedProducts: [OrderedProductInput!]): Order
     processOrder(id: ID!, purchaseDate: DateTime!): Order!
     
-    createProduct(data: CreateProductInput): Product
+    createProduct(data: SaveProductInput): Product
     deleteProduct(id: ID!): Product!
+    updateProduct(id: ID!, data: SaveProductInput!): Product!
+
+    createCategory(data: SaveCategoryInput!): Category!
+    deleteCategory(id: ID!): Category!
+    updateCategory(id: ID!, data: SaveCategoryInput!): Category!
 }
 
 # type Subscription {
@@ -45,6 +55,7 @@ input LoginUserInput {
 }
 
 input UpdateUserInput {
+    accountType: AccountType
     name: String
     email: String
     password: String
@@ -66,29 +77,45 @@ input CreateOrderInput{
     orderDate: DateTime!
     purchaseDate: DateTime
     isPaid: Boolean
-    totalPrice: Float!
     shippingFee: Float
     buyer: ID!
-    products: [ID!]!
+    buyerAccount: String!
+    products: [OrderedProductInput!]!
 }
-
 input UpdateOrderInput{
-    totalPrice: Float
+    orderDate: DateTime
     shippingFee: Float
-    products: [ID!]
+    products: [OrderedProductInput!]
+    oldTotalPrice: Float
+    oldShippingFee: Float
+    oldProductData: [OrderedProductInput!]
+    buyer: ID
+    buyerAccount: String
+}
+
+input OrderedProductInput{
+  quantity: Int!
+  orderedProduct: ID
+  product: ID!
+  price: PriceInput
+  available: Int
 }
 
 
-
-input CreateProductInput {
+input SaveProductInput {
   name: String!
   code: String!
   available: Int!
   expDate: DateTime
-  price: CreatePriceInput!
+  price: PriceInput!
+  category: ID!
 }
 
-input CreatePriceInput{
+input SaveCategoryInput {
+  name: String!
+  description: String
+}
+input PriceInput{
   retail: Float!
   reseller: Float!
   cityDistributor: Float!
@@ -104,35 +131,50 @@ type Order{
   shippingFee: Float
   buyer: User!
   createdBy: User!
-  products: [Product!]!
+  products: [OrderedProduct!]!
   updatedAt: String!
   createdAt: String!
 }
 
+type Category{
+  id: ID!
+  name: String!
+  description: String
+  products: [Product!]
+}
+
+type OrderedProduct{
+  id: ID!
+  quantity: Int!
+  product: Product!
+  order: Order
+}
 
 type Product{
   id: ID!
+  category: Category
+  orderedProduct: [OrderedProduct!]
   name: String!
   code: String!
   available: Int!
-  expDate: DateTime
+  expDate: DateTime!
   orders: [Order!]!
-  price: Price
+  price: Price!
   updatedAt: String! 
   createdAt: String!  
 }
 
 
-enum MutationType {
-    CREATED
-    UPDATED
-    DELETED
-}
+# enum MutationType {
+#     CREATED
+#     UPDATED
+#     DELETED
+# }
 
 
-enum AccountType{
-  RETAILER
-  RESELLER
-  CITY_DISTRIBUTOR
-  PROVINCIAL_DISTRIBUTOR
-}
+# enum AccountType{
+#   RETAILER
+#   RESELLER
+#   CITY_DISTRIBUTOR
+#   PROVINCIAL_DISTRIBUTOR
+# }

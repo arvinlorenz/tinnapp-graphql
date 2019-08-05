@@ -1,0 +1,101 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [defaultHref]="'/orders'"></ion-back-button>
+    </ion-buttons>
+    <ion-buttons slot="primary">
+      <ion-button (click)="saveOrder()" [disabled]="!form?.valid">
+        <ion-icon name="checkmark" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ editMode ? order?.buyer.name : 'Add Order' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="form">
+    <ion-grid>
+        <ion-row *ngIf="editMode">
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-item>
+              <h4>Total Price: {{ totalPrice }}</h4>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-item>
+              <ion-label>Customer</ion-label>
+              <ion-select placeholder="Select One" formControlName="customer" (ionChange)="onChange($event)">
+                <div *ngFor="let customerEl of customers; let i = index">
+                    <ion-select-option [value]="customerEl.id">{{ customerEl.name }}</ion-select-option>
+                </div>
+              </ion-select>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+
+        <ion-row *ngIf="isPaid">
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-item>
+              <ion-label position="floating">Purchase Date</ion-label>
+              <ion-datetime 
+                formControlName="purchaseDate"></ion-datetime>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-item>
+              <ion-label position="floating">Order Date</ion-label>
+              <ion-datetime 
+                [min]="thisYear"
+                formControlName="orderDate"></ion-datetime>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+
+        <ion-row>
+          <ion-col size-sm="6" offset-sm="3">
+            <ion-item>
+              <ion-label position="floating">Shipping Fee</ion-label>
+              <ion-input 
+                type="number" 
+                formControlName="shippingFee"
+                ></ion-input>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+        
+
+        <div text-center>
+          <ion-spinner color="primary" *ngIf="isLoading"></ion-spinner>
+        </div>
+        
+        <div formArrayName="products" *ngIf="!isLoading">
+          <ion-row>
+            <ion-col size-sm="6" offset-sm="3">
+              <ion-list>
+                <ion-list-header>
+                  <ion-label>Products</ion-label>
+                </ion-list-header>
+                <div *ngFor="let productGroup of productsArray.controls; let i = index;">
+                  <div [formGroupName]="i">
+                    <ion-item>
+                      <ion-label position="floating">
+                        {{ getProductDetails(productGroup.value.product).name }}
+                        <span>&#8369;</span> 
+                        {{getProductDetails(productGroup.value.product).price[buyerAccount] }}
+                      </ion-label>
+                      <ion-input type="number" formControlName="quantity" [placeholder]="getQuantity(productGroup.value.product) + ' items remaining'"></ion-input>
+                    </ion-item>
+                  </div>
+              </div>
+          </ion-list>
+          </ion-col>
+        </ion-row>
+      </div>
+    </ion-grid>
+  </form>
+</ion-content>

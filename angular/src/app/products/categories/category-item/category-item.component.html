@@ -1,0 +1,5 @@
+<ion-item [routerLink]="[category.id]" *ngIf="category.products">
+  <ion-badge [color]="category.products.length > 0 ? 'tertiary' : 'danger'"  slot="end">{{category.products.length}}</ion-badge>
+  <ion-label>{{category.name}}</ion-label>
+</ion-item>
+  

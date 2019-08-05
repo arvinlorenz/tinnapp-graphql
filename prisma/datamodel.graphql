@@ -17,26 +17,43 @@ type Order{
   purchaseDate: DateTime
   isPaid: Boolean! @default(value: false)
   shippingFee: Float
-  totalPrice: Float!
+  totalPrice: Float
+  products: [OrderedProduct!] @relation(onDelete: CASCADE)
   buyer: User! @relation(name: "OrdersByUser" onDelete: SET_NULL)
   createdBy: User @relation(name: "OrdersCreatedByUser" onDelete: SET_NULL)
-  products: [Product!]! @relation(name: "ProductsInOrder" onDelete: SET_NULL)
   updatedAt: DateTime! @updatedAt 
   createdAt: DateTime! @createdAt 
+}
+
+type OrderedProduct{
+  id: ID! @id
+  quantity: Int!
+  product: Product @relation(link:INLINE name: "ProductToOrderedProduct" onDelete: SET_NULL)
+  order: Order
+  
 }
 
 type Product{
   id: ID! @id
+  orderedProduct: [OrderedProduct!] @relation(name: "ProductToOrderedProduct" onDelete: CASCADE)
+  category: Category @relation(name: "CategoryToProduct" onDelete: SET_NULL)
   name: String!
-  code: String!
+  code: String! @unique
   available: Int!
   expDate: DateTime
-  orders: [Order!]!  @relation(name: "ProductsInOrder" onDelete: SET_NULL)
-  price: Price @relation(onDelete: CASCADE)
+  price: Price @relation(name: "ProductPrice" onDelete: CASCADE)
   updatedAt: DateTime! @updatedAt 
   createdAt: DateTime! @createdAt 
 }
 
+type Category{
+  id: ID! @id
+  name: String!
+  description: String
+  products: [Product!] @relation(name: "CategoryToProduct" onDelete: CASCADE)
+  updatedAt: DateTime! @updatedAt 
+  createdAt: DateTime! @createdAt 
+}
 
 type Price{
   id: ID! @id
@@ -44,7 +61,7 @@ type Price{
   reseller: Float!
   cityDistributor: Float!
   provincialDistributor: Float!
-  product: Product @relation(link: INLINE)
+  product: Product @relation(name: "ProductPrice" onDelete: CASCADE link: INLINE)
   updatedAt: DateTime! @updatedAt 
   createdAt: DateTime! @createdAt 
 }

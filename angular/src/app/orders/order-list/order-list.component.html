@@ -1,0 +1,25 @@
+<ion-grid>
+  <ion-row>
+    <ion-col size-md="6" offset-md="3">
+      <ion-list>
+        <ion-item-sliding *ngFor="let order of orders; let i = index" #slidingItem>
+          <app-order-item
+            [order]="order"
+            [index]="i">
+          </app-order-item>
+          <ion-item-options side="end" *ngIf="!order.isPaid">
+            <ion-item-option color="primary" (click)="process(order.id, slidingItem)">
+              <ion-icon name="checkmark" slot="icon-only"></ion-icon>
+            </ion-item-option>
+            <ion-item-option color="secondary" (click)="onEdit(order.id, slidingItem)">
+              <ion-icon name="create" slot="icon-only"></ion-icon>
+            </ion-item-option>
+            <ion-item-option color="danger" (click)="onDelete(order.id, slidingItem)">
+              <ion-icon name="trash" slot="icon-only"></ion-icon>
+            </ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      </ion-list>
+    </ion-col>
+  </ion-row>
+</ion-grid>
