@@ -10,6 +10,7 @@ import { switchMap, tap, take, delay } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 import { ArrayValidators } from './array.validators';
 import { LoadingController } from '@ionic/angular';
+import { SharedService } from 'src/app/shared/shared.service';
 
 const accountTypes = {
   RETAILER: 'retail',
@@ -41,6 +42,7 @@ export class OrderEditPage implements OnInit {
     private orderService: OrderService,
     private authService: AuthService,
     private productService: ProductsService,
+    private sharedService: SharedService,
     private fb: FormBuilder,
     private loadingCtrl: LoadingController,
     private router: Router
@@ -97,7 +99,7 @@ export class OrderEditPage implements OnInit {
   }
   ngOnInit() {
     this.start();
-    this.productService.products.subscribe(products => {
+    this.sharedService.products.subscribe(products => {
       this.productOptions = products;
       this.isLoading = false;
     });
@@ -107,7 +109,7 @@ export class OrderEditPage implements OnInit {
   }
   ionViewWillEnter() {
     this.start();
-    this.productService.products.subscribe(products => {
+    this.sharedService.products.subscribe(products => {
       this.productOptions = products;
       this.isLoading = false;
       console.log('productOptions', this.productOptions);

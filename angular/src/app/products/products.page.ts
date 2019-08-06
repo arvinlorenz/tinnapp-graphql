@@ -3,6 +3,7 @@ import { ProductsService } from './products.service';
 import { AuthService } from '../auth/auth.service';
 import { Product } from './product.model';
 import { LoadingController } from '@ionic/angular';
+import { SharedService } from '../shared/shared.service';
 
 @Component({
   selector: 'app-products',
@@ -13,19 +14,19 @@ export class ProductsPage implements OnInit {
   products: Product[];
   isLoading = true;
   constructor(
-    private productsService: ProductsService,
+    private sharedService: SharedService,
     private authService: AuthService,
     private loadingCtrl: LoadingController
   ) { }
 
   ngOnInit() {
-    this.productsService.products.subscribe((products: any) => {
+    this.sharedService.products.subscribe((products: any) => {
       this.isLoading = false;
       this.products = products;
     });
   }
   ionViewWillEnter() {
-    this.productsService.products.subscribe((products: any) => {
+    this.sharedService.products.subscribe((products: any) => {
       this.isLoading = false;
       this.products = products;
     });

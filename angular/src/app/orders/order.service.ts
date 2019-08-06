@@ -2,27 +2,19 @@ import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { ApolloQueryResult } from 'apollo-client';
-import { BehaviorSubject } from 'rxjs';
 import { tap, take, map, switchMap } from 'rxjs/operators';
 
-import { ProductsService } from '../products/products.service';
-import { Price } from '../products/price.model';
 import { of } from 'zen-observable';
+import { SharedService } from '../shared/shared.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class OrderService {
 // tslint:disable-next-line: variable-name
-  private _orders = new BehaviorSubject<any>([]);
   constructor(
     private apollo: Apollo,
-    private productService: ProductsService,
+    private sharedService: SharedService
     ) { }
 
-  get orders() {
-    return this._orders.asObservable();
-  }
 
   fetchOrders() {
     return this.apollo
@@ -57,11 +49,15 @@ export class OrderService {
                     available
                     expDate
                     price{
-                    retail
-                    reseller
-                    cityDistributor
-                    provincialDistributor
-                  }
+                      retail
+                      reseller
+                      cityDistributor
+                      provincialDistributor
+                    }
+                    category{
+                      id
+                      name
+                    }
                   }
               }
               updatedAt
@@ -77,13 +73,13 @@ export class OrderService {
           return orders.data.orders;
         }),
         tap((orders) => {
-          this._orders.next(orders);
+          this.sharedService._orders.next(orders);
         })
       );
   }
 
   getOrder(orderId: string) {
-    return this.orders.pipe(
+    return this.sharedService.orders.pipe(
       take(1),
       switchMap(orders => {
          return of(orders.find(o => o.id === orderId));
@@ -167,20 +163,21 @@ export class OrderService {
     })
     .pipe(
       switchMap((res: any) => {
-        return this.orders;
+        return this.sharedService.orders;
       }),
       take(1),
       switchMap(orders => {
-        this._orders.next(orders.filter(order => order.id !== orderId));
-        return this.productService.products;
+        this.sharedService._orders.next(orders.filter(order => order.id !== orderId));
+        return this.sharedService.products;
       }),
       take(1),
       tap(allProducts => {
+        console.log(allProducts);
         orderedProducts.map(adjustedCountProduct => {
           // tslint:disable-next-line: max-line-length
           allProducts[allProducts.findIndex((p: any) => p.id === adjustedCountProduct.product)].available = adjustedCountProduct.available + adjustedCountProduct.quantity;
         });
-        this.productService._products.next(allProducts);
+        this.sharedService._products.next(allProducts);
       })
     );
   }
@@ -251,13 +248,13 @@ export class OrderService {
       .pipe(
         switchMap((order: any) => {
           createdOrder = order.data.createOrder;
-          return this.orders;
+          return this.sharedService.orders;
         }),
         take(1),
         switchMap((orders) => {
           const newOrders = orders.concat(createdOrder);
-          this._orders.next(newOrders);
-          return this.productService.products;
+          this.sharedService._orders.next(newOrders);
+          return this.sharedService.products;
         }),
         take(1),
         tap((productsRes: any[]) => {
@@ -267,7 +264,7 @@ export class OrderService {
           .map(updatedProduct => {
             productsData[productsRes.findIndex(p => p.id === updatedProduct.id)] = updatedProduct;
           });
-          this.productService._products.next(productsData);
+          this.sharedService._products.next(productsData);
           console.log(productsData);
         })
       );
@@ -342,11 +339,15 @@ export class OrderService {
                     available
                     expDate
                     price{
-                    retail
-                    reseller
-                    cityDistributor
-                    provincialDistributor
-                  }
+                      retail
+                      reseller
+                      cityDistributor
+                      provincialDistributor
+                   }
+                   category{
+                      id
+                      name
+                    }
                   }
               }
               updatedAt
@@ -371,15 +372,15 @@ export class OrderService {
       switchMap((order: any) => {
         updatedOrder = order.data.updateOrder;
         console.log('updatedOrder', updatedOrder);
-        return this.orders;
+        return this.sharedService.orders;
       }),
       take(1),
       switchMap((orders) => {
         const updatedOrderIndex = orders.findIndex(ord => ord.id === orderId);
         updatedOrders = [...orders];
         updatedOrders[updatedOrderIndex] = updatedOrder;
-        this._orders.next(updatedOrders);
-        return this.productService.products;
+        this.sharedService._orders.next(updatedOrders);
+        return this.sharedService.products;
       }),
       take(1),
       tap((productsRes: any[]) => {
@@ -391,7 +392,7 @@ export class OrderService {
           console.log('updatedProduct', updatedProduct);
           productsData[productsRes.findIndex(p => p.id === updatedProduct.id)] = updatedProduct;
         });
-        this.productService._products.next(productsData);
+        this.sharedService._products.next(productsData);
       })
     );
   }
@@ -413,7 +414,7 @@ export class OrderService {
     }).pipe(
       switchMap((res: any) => {
        purchasedDate = res.data.processOrder.purchaseDate;
-       return this.orders;
+       return this.sharedService.orders;
       }),
       take(1),
       tap(orders => {
@@ -422,7 +423,7 @@ export class OrderService {
         processedOrders[processedOrderIndex].purchaseDate = purchasedDate;
         processedOrders[processedOrderIndex].isPaid = true;
         console.log(processedOrders);
-        this._orders.next(processedOrders);
+        this.sharedService._orders.next(processedOrders);
       })
 
     );

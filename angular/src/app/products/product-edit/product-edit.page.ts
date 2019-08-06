@@ -7,6 +7,7 @@ import { ProductsService } from '../products.service';
 import { LoadingController } from '@ionic/angular';
 import { Observable } from 'apollo-link';
 import { Category } from '../category.model';
+import { SharedService } from 'src/app/shared/shared.service';
 
 @Component({
   selector: 'app-product-edit',
@@ -24,6 +25,7 @@ export class ProductEditPage implements OnInit {
   categories: Category[];
   constructor(
     private productService: ProductsService,
+    private sharedService: SharedService,
     private route: ActivatedRoute,
     private router: Router,
     private loadingCtrl: LoadingController,
@@ -34,7 +36,7 @@ export class ProductEditPage implements OnInit {
   ngOnInit() {
     this.now = (new Date()).toISOString();
     this.to = new Date(new Date().getTime() + 63113852000).toISOString();
-    this.productService.categories.subscribe(categoriesRes => {
+    this.sharedService.categories.subscribe(categoriesRes => {
       this.categories = categoriesRes;
     });
     this.route.paramMap.subscribe(paraMap => {

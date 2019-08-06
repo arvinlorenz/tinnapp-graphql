@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Category } from '../category.model';
-import { ProductsService } from '../products.service';
+import { SharedService } from 'src/app/shared/shared.service';
 
 @Component({
   selector: 'app-categories',
@@ -12,18 +12,18 @@ export class CategoriesPage implements OnInit {
   categories: Category[];
   isLoading = true;
   constructor(
-    private productsService: ProductsService
+    private sharedService: SharedService
   ) { }
 
   ngOnInit() {
-    this.productsService.categories.subscribe(categories => {
+    this.sharedService.categories.subscribe(categories => {
         this.isLoading = false;
         this.categories = categories;
       });
   }
 
   ionViewWillEnter() {
-    this.productsService.categories.subscribe(categories => {
+    this.sharedService.categories.subscribe(categories => {
         this.isLoading = false;
         this.categories = categories;
       });

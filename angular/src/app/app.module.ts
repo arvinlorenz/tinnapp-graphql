@@ -14,6 +14,8 @@ import { setContext } from 'apollo-link-context';
 import { HttpLinkModule, HttpLink } from 'apollo-angular-link-http';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { Plugins } from '@capacitor/core';
+import { OrderService } from './orders/order.service';
+import { ProductsService } from './products/products.service';
 
 export function createApollo(httpLink: HttpLink) {
   const http = httpLink.create({ uri: 'http://localhost:4000'});
@@ -55,7 +57,9 @@ export function createApollo(httpLink: HttpLink) {
       provide: APOLLO_OPTIONS,
       useFactory: createApollo,
       deps: [HttpLink]
-    }
+    },
+    OrderService,
+    ProductsService
 
   ],
   bootstrap: [AppComponent]

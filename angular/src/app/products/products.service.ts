@@ -2,37 +2,33 @@ import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { ApolloQueryResult } from 'apollo-client';
-import { BehaviorSubject } from 'rxjs';
 import { map, tap, switchMap, take } from 'rxjs/operators';
 import { Price } from './price.model';
-import { Plugins } from '@capacitor/core';
 import { Product } from './product.model';
 import { Category } from './category.model';
-import { OrderService } from '../orders/order.service';
+import { SharedService } from '../shared/shared.service';
+import { AuthService } from '../auth/auth.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+const accountTypes = {
+  RETAILER: 'retail',
+  RESELLER:   'reseller',
+  CITY_DISTRIBUTOR: 'cityDistributor',
+  PROVINCIAL_DISTRIBUTOR: 'provincialDistributor',
+};
+
+
+@Injectable()
 export class ProductsService {
 
-  // tslint:disable-next-line: variable-name
-  public _products = new BehaviorSubject<any[]>([]);
-  // tslint:disable-next-line: variable-name
-  public _categories = new BehaviorSubject<any[]>([]);
 
   // public _categories = new BehaviorSubject<{type: string, data: any[]}>({type: '', data: []});
 
-  get products() {
-    return this._products.asObservable();
-  }
-
-  get categories() {
-    return this._categories.asObservable();
-  }
 
   constructor(
     private apollo: Apollo,
-    private orderService: OrderService) { }
+    private sharedService: SharedService,
+    private authService: AuthService
+   ) { }
 
   fetchProducts() {
     return this.apollo
@@ -66,7 +62,7 @@ export class ProductsService {
         }),
         tap((products) => {
           console.log(products);
-          this._products.next(products);
+          this.sharedService._products.next(products);
         })
       );
   }
@@ -157,18 +153,18 @@ export class ProductsService {
     }).pipe(
       switchMap((productRes: any) => {
         createdProduct = productRes.data.createProduct;
-        return this.products;
+        return this.sharedService.products;
       }),
       take(1),
       switchMap(products => {
-        this._products.next(products.concat(createdProduct));
-        return this.categories;
+        this.sharedService._products.next(products.concat(createdProduct));
+        return this.sharedService.categories;
       }),
       take(1),
       tap((categories: any) => {
         const categoryIndex = categories.findIndex(ct => ct.id === category);
         categories[categoryIndex].products = categories[categoryIndex].products.concat(createdProduct);
-        this._categories.next(categories);
+        this.sharedService._categories.next(categories);
       })
     );
   }
@@ -184,6 +180,7 @@ export class ProductsService {
   ) {
     let updatedProduct: Product;
     let updatedProducts: Product[];
+    let oldPriceProduct;
     return this.apollo.mutate({
       mutation: gql`
         mutation updateProduct($id: ID!, $data: SaveProductInput!){
@@ -199,6 +196,7 @@ export class ProductsService {
               provincialDistributor
             }
             category{
+              id
               name
             }
           }
@@ -218,10 +216,11 @@ export class ProductsService {
     }).pipe(
       switchMap((productRes: any) => {
         updatedProduct = productRes.data.updateProduct;
-        return this.products;
+        return this.sharedService.products;
       }),
       take(1),
       map(products => {
+        oldPriceProduct = products.find(p => p.id === productId).price;
         const updatedProductIndex = products.findIndex(pr => pr.id === productId);
         updatedProducts = [...products];
         updatedProducts[updatedProductIndex] = new Product(
@@ -235,9 +234,40 @@ export class ProductsService {
         );
         return updatedProducts;
       }),
-      tap(products => {
-        this._products.next(products);
+      switchMap(products => {
+        this.sharedService._products.next(products);
+        return this.sharedService.orders;
+      }),
+      take(1),
+      tap(ordersRes => {
+        const orders = [...ordersRes];
+        const ordersWithProduct =
+        orders.filter(order => order.isPaid === false)
+        .filter((order: any) => {
+          if (order.products.some(p => p.product.id)) {
+            return order;
+          }
+        })
+        .map(order => {
+          return {
+            id: order.id,
+            orderedProduct: order.products.find(p => p.product.id),
+            totalPrice: order.totalPrice,
+            buyerAccountType: order.buyer.accountType
+          };
+        });
+
+        for (const order of ordersWithProduct) {
+          const orderIndex = orders.findIndex(o => o.id === order.id);
+          const newPrice = order.totalPrice
+           - (order.orderedProduct.quantity * oldPriceProduct[accountTypes[order.buyerAccountType]])
+           + (order.orderedProduct.quantity * updatedProduct.price[accountTypes[order.buyerAccountType]]);
+          orders[orderIndex].totalPrice = newPrice;
+        }
+
+        this.sharedService._orders.next(orders);
       })
+
     );
   }
   deleteProduct(
@@ -245,7 +275,6 @@ export class ProductsService {
   ) {
     let productPrice;
     let categoryId;
-
     return this.apollo
     .mutate({
       mutation: gql`
@@ -261,27 +290,50 @@ export class ProductsService {
       }
     }).pipe(
       switchMap(() => {
-        return this.products;
+        return this.sharedService.products;
       }),
       take(1),
       switchMap((products: Product[]) => {
         const deletedProduct: any = products.find((p: any) => p.id === id);
+        console.log(deletedProduct);
         productPrice = deletedProduct.price;
         categoryId = deletedProduct.category.id;
-        this._products.next(products.filter(product => product.id !== id));
-        return this.categories;
+        this.sharedService._products.next(products.filter(product => product.id !== id));
+        return this.sharedService.categories;
       }),
       take(1),
       switchMap((categories: any) => {
         const categoryIndex = categories.findIndex(ct => ct.id === categoryId);
         categories[categoryIndex].products = categories[categoryIndex].products.filter(product => product.id !== id);
-        this._categories.next(categories);
-        return this.orderService.orders;
+        this.sharedService._categories.next(categories);
+        return this.sharedService.orders;
       }),
       take(1),
       tap(ordersRes => {
         const orders = [...ordersRes];
-        console.log(ordersRes);
+        const ordersWithProduct =
+        orders.filter(order => order.isPaid === false)
+        .filter((order: any) => {
+          if (order.products.some(p => p.product.id)) {
+            return order;
+          }
+        })
+        .map(order => {
+          return {
+            id: order.id,
+            orderedProduct: order.products.find(p => p.product.id),
+            totalPrice: order.totalPrice,
+            buyerAccountType: order.buyer.accountType
+          };
+        });
+
+        for (const order of ordersWithProduct) {
+          const orderIndex = orders.findIndex(o => o.id === order.id);
+          const newPrice = order.totalPrice - (order.orderedProduct.quantity * productPrice[accountTypes[order.buyerAccountType]]);
+          orders[orderIndex].totalPrice = newPrice;
+        }
+
+        this.sharedService._orders.next(orders);
       })
     );
   }
@@ -310,7 +362,7 @@ export class ProductsService {
           return categories.data.categories;
         }),
         tap((categories) => {
-          this._categories.next(categories);
+          this.sharedService._categories.next(categories);
         })
       );
   }
@@ -345,11 +397,11 @@ export class ProductsService {
     .pipe(
       switchMap((categoryRes: any) => {
         createdCategory = categoryRes.data.createCategory;
-        return this.categories;
+        return this.sharedService.categories;
       }),
       take(1),
       tap((categories) => {
-        this._categories.next(categories.concat(createdCategory));
+        this.sharedService._categories.next(categories.concat(createdCategory));
       })
     );
   }
@@ -381,7 +433,7 @@ export class ProductsService {
     .pipe(
       switchMap((categoryRes: any) => {
         updatedCategory = categoryRes.data.updateCategory;
-        return this.categories;
+        return this.sharedService.categories;
       }),
       take(1),
       map(categories => {
@@ -394,7 +446,7 @@ export class ProductsService {
         return updatedCategories;
         }),
       tap(categories => {
-        this._categories.next(categories);
+        this.sharedService._categories.next(categories);
       })
     );
   }
@@ -413,17 +465,17 @@ export class ProductsService {
       }
     }).pipe(
       switchMap(() => {
-        return this.categories;
+        return this.sharedService.categories;
       }),
       take(1),
       switchMap((categories: Category[]) => {
-        this._categories.next(categories.filter(category => category.id !== id));
-        return this.products;
+        this.sharedService._categories.next(categories.filter(category => category.id !== id));
+        return this.sharedService.products;
       }),
       take(1),
       tap(products => {
         const updatedProducts = products.filter(p => p.category.id !== id);
-        this._products.next(updatedProducts);
+        this.sharedService._products.next(updatedProducts);
       })
     );
   }

@@ -1,9 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { OrderService } from './order.service';
 import { Order } from './order.model';
 import { SegmentChangeEventDetail } from '@ionic/core';
 import { LoadingController } from '@ionic/angular';
+import { SharedService } from '../shared/shared.service';
 
 @Component({
   selector: 'app-orders',
@@ -22,12 +22,12 @@ export class OrdersPage implements OnInit, OnDestroy {
   isPaidFilter;
 
   constructor(
-    private orderService: OrderService,
+    private sharedService: SharedService,
     private loadingCtrl: LoadingController
   ) { }
 
   ngOnInit() {
-    this.ordersSub = this.orderService.orders
+    this.ordersSub = this.sharedService.orders
       .subscribe(orders => {
         this.isPaidFilter = this.filter === 'current' ? false : true;
         this.isLoading = false;
@@ -36,7 +36,7 @@ export class OrdersPage implements OnInit, OnDestroy {
       });
   }
   ionViewWillEnter() {
-    this.ordersSub = this.orderService.orders
+    this.ordersSub = this.sharedService.orders
     .subscribe(orders => {
       this.isPaidFilter = this.filter === 'current' ? false : true;
       this.isLoading = false;
