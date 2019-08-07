@@ -109,6 +109,7 @@ input SaveProductInput {
   expDate: DateTime
   price: PriceInput!
   category: ID!
+  oldPrice: PriceInput
 }
 
 input SaveCategoryInput {

@@ -421,21 +421,7 @@ const Mutation = {
     },
 
     async updateProduct(parent, args, { prisma, request }, info) {
-        const userId = getUserId(request)
-
-        const user = await prisma.query.user(
-            {
-             where:{
-                 id:userId
-             }
-            } 
-         )
-        const accountType = user.accountType
-        
-        if(accountType !== "PROVINCIAL_DISTRIBUTOR"){
-            throw new Error("Not allowed to create product")
-        }
-
+        const priceChanged = JSON.stringify(args.data.price) == JSON.stringify(args.data.oldPrice);
         let opArgsProduct = {}
         opArgsProduct.data = {
             ...args.data
@@ -450,16 +436,68 @@ const Mutation = {
                 id: args.data.category
             }
         }
-        console.log(JSON.stringify(opArgsProduct, undefined, 3));
-        return prisma.mutation.updateProduct({
+
+        delete opArgsProduct.data.oldPrice;
+        const mustReturn =  await prisma.mutation.updateProduct({
             where: {
                 id: args.id
             },
             data: {
                 ...opArgsProduct.data
             }
-        }, info)
-        // console.log(JSON.stringify(opArgsProduct, undefined, 2));
+        }, `{
+            id
+            name
+            code
+            available
+            expDate
+            price {
+              retail
+              reseller
+              cityDistributor
+              provincialDistributor
+            }
+            category{
+              id
+              name
+            }
+            orderedProduct(where: {
+                AND: [{
+                product: {
+                  id: "cjz0pzd9503cl0772gkt2x7cc"
+                }
+                }, {
+                  order: {
+                    isPaid_not:true
+                  }
+                }]
+              }){
+                quantity
+                order{
+                    id
+                    totalPrice
+                    buyer{
+                        accountType
+                    }
+                }
+              }
+        }`)
+        if(priceChanged) {
+            for (const orderInfo of mustReturn.orderedProduct) {
+                const newPrice = orderInfo.order.totalPrice
+               - (orderInfo.quantity * args.data.oldPrice[accountTypes[orderInfo.order.buyer.accountType]])
+               + (orderInfo.quantity * mustReturn.price[accountTypes[orderInfo.order.buyer.accountType]]);
+    
+               await prisma.mutation.updateOrder({where: {
+                   id: orderInfo.order.id
+               }, data: {
+                   totalPrice: newPrice
+               }})
+            }
+        }
+        
+
+        return mustReturn;
     },
 
     async createCategory(paren, args, { prisma, request }, info) {
