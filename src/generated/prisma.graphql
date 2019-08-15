@@ -1,5 +1,5 @@
 # source: http://localhost:4466/apptestapp/dev
-# timestamp: Thu Aug 15 2019 09:46:16 GMT+0800 (Philippine Standard Time)
+# timestamp: Thu Aug 15 2019 11:20:16 GMT+0800 (Philippine Standard Time)
 
 enum AccountType {
   RETAILER
@@ -1780,7 +1780,7 @@ type Product implements Node {
   available: Int!
   expDate: DateTime
   price: Price
-  image: String!
+  image: String
   updatedAt: DateTime!
   createdAt: DateTime!
 }
@@ -1801,7 +1801,7 @@ input ProductCreateInput {
   code: String!
   available: Int!
   expDate: DateTime
-  image: String!
+  image: String
   orderedProduct: OrderedProductCreateManyWithoutProductInput
   category: CategoryCreateOneWithoutProductsInput
   price: PriceCreateOneWithoutProductInput
@@ -1828,7 +1828,7 @@ input ProductCreateWithoutCategoryInput {
   code: String!
   available: Int!
   expDate: DateTime
-  image: String!
+  image: String
   orderedProduct: OrderedProductCreateManyWithoutProductInput
   price: PriceCreateOneWithoutProductInput
 }
@@ -1839,7 +1839,7 @@ input ProductCreateWithoutOrderedProductInput {
   code: String!
   available: Int!
   expDate: DateTime
-  image: String!
+  image: String
   category: CategoryCreateOneWithoutProductsInput
   price: PriceCreateOneWithoutProductInput
 }
@@ -1850,7 +1850,7 @@ input ProductCreateWithoutPriceInput {
   code: String!
   available: Int!
   expDate: DateTime
-  image: String!
+  image: String
   orderedProduct: OrderedProductCreateManyWithoutProductInput
   category: CategoryCreateOneWithoutProductsInput
 }
@@ -1889,7 +1889,7 @@ type ProductPreviousValues {
   code: String!
   available: Int!
   expDate: DateTime
-  image: String!
+  image: String
   updatedAt: DateTime!
   createdAt: DateTime!
 }

@@ -133,7 +133,7 @@ type Order{
   shippingFee: Float
   buyer: User!
   createdBy: User!
-  products: [OrderedProduct!]!
+  products: [OrderedProduct!]
   updatedAt: String!
   createdAt: String!
 }
