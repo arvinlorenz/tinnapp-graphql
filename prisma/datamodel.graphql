@@ -42,7 +42,7 @@ type Product{
   available: Int!
   expDate: DateTime
   price: Price @relation(name: "ProductPrice" onDelete: CASCADE)
-  image: String!
+  image: String
   updatedAt: DateTime! @updatedAt 
   createdAt: DateTime! @createdAt 
 }
