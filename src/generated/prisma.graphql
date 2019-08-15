@@ -1,5 +1,5 @@
 # source: http://localhost:4466/apptestapp/dev
-# timestamp: Wed Jul 17 2019 12:10:06 GMT+0800 (Philippine Standard Time)
+# timestamp: Thu Aug 15 2019 09:46:16 GMT+0800 (Philippine Standard Time)
 
 enum AccountType {
   RETAILER
@@ -1780,6 +1780,7 @@ type Product implements Node {
   available: Int!
   expDate: DateTime
   price: Price
+  image: String!
   updatedAt: DateTime!
   createdAt: DateTime!
 }
@@ -1800,6 +1801,7 @@ input ProductCreateInput {
   code: String!
   available: Int!
   expDate: DateTime
+  image: String!
   orderedProduct: OrderedProductCreateManyWithoutProductInput
   category: CategoryCreateOneWithoutProductsInput
   price: PriceCreateOneWithoutProductInput
@@ -1826,6 +1828,7 @@ input ProductCreateWithoutCategoryInput {
   code: String!
   available: Int!
   expDate: DateTime
+  image: String!
   orderedProduct: OrderedProductCreateManyWithoutProductInput
   price: PriceCreateOneWithoutProductInput
 }
@@ -1836,6 +1839,7 @@ input ProductCreateWithoutOrderedProductInput {
   code: String!
   available: Int!
   expDate: DateTime
+  image: String!
   category: CategoryCreateOneWithoutProductsInput
   price: PriceCreateOneWithoutProductInput
 }
@@ -1846,6 +1850,7 @@ input ProductCreateWithoutPriceInput {
   code: String!
   available: Int!
   expDate: DateTime
+  image: String!
   orderedProduct: OrderedProductCreateManyWithoutProductInput
   category: CategoryCreateOneWithoutProductsInput
 }
@@ -1870,6 +1875,8 @@ enum ProductOrderByInput {
   available_DESC
   expDate_ASC
   expDate_DESC
+  image_ASC
+  image_DESC
   updatedAt_ASC
   updatedAt_DESC
   createdAt_ASC
@@ -1882,6 +1889,7 @@ type ProductPreviousValues {
   code: String!
   available: Int!
   expDate: DateTime
+  image: String!
   updatedAt: DateTime!
   createdAt: DateTime!
 }
@@ -2059,6 +2067,46 @@ input ProductScalarWhereInput {
 
   """All values greater than or equal the given value."""
   expDate_gte: DateTime
+  image: String
+
+  """All values that are not equal to given value."""
+  image_not: String
+
+  """All values that are contained in given list."""
+  image_in: [String!]
+
+  """All values that are not contained in given list."""
+  image_not_in: [String!]
+
+  """All values less than the given value."""
+  image_lt: String
+
+  """All values less than or equal the given value."""
+  image_lte: String
+
+  """All values greater than the given value."""
+  image_gt: String
+
+  """All values greater than or equal the given value."""
+  image_gte: String
+
+  """All values containing the given string."""
+  image_contains: String
+
+  """All values not containing the given string."""
+  image_not_contains: String
+
+  """All values starting with the given string."""
+  image_starts_with: String
+
+  """All values not starting with the given string."""
+  image_not_starts_with: String
+
+  """All values ending with the given string."""
+  image_ends_with: String
+
+  """All values not ending with the given string."""
+  image_not_ends_with: String
   updatedAt: DateTime
 
   """All values that are not equal to given value."""
@@ -2147,6 +2195,7 @@ input ProductUpdateInput {
   code: String
   available: Int
   expDate: DateTime
+  image: String
   orderedProduct: OrderedProductUpdateManyWithoutProductInput
   category: CategoryUpdateOneWithoutProductsInput
   price: PriceUpdateOneWithoutProductInput
@@ -2157,6 +2206,7 @@ input ProductUpdateManyDataInput {
   code: String
   available: Int
   expDate: DateTime
+  image: String
 }
 
 input ProductUpdateManyMutationInput {
@@ -2164,6 +2214,7 @@ input ProductUpdateManyMutationInput {
   code: String
   available: Int
   expDate: DateTime
+  image: String
 }
 
 input ProductUpdateManyWithoutCategoryInput {
@@ -2206,6 +2257,7 @@ input ProductUpdateWithoutCategoryDataInput {
   code: String
   available: Int
   expDate: DateTime
+  image: String
   orderedProduct: OrderedProductUpdateManyWithoutProductInput
   price: PriceUpdateOneWithoutProductInput
 }
@@ -2215,6 +2267,7 @@ input ProductUpdateWithoutOrderedProductDataInput {
   code: String
   available: Int
   expDate: DateTime
+  image: String
   category: CategoryUpdateOneWithoutProductsInput
   price: PriceUpdateOneWithoutProductInput
 }
@@ -2224,6 +2277,7 @@ input ProductUpdateWithoutPriceDataInput {
   code: String
   available: Int
   expDate: DateTime
+  image: String
   orderedProduct: OrderedProductUpdateManyWithoutProductInput
   category: CategoryUpdateOneWithoutProductsInput
 }
@@ -2422,6 +2476,46 @@ input ProductWhereInput {
 
   """All values greater than or equal the given value."""
   expDate_gte: DateTime
+  image: String
+
+  """All values that are not equal to given value."""
+  image_not: String
+
+  """All values that are contained in given list."""
+  image_in: [String!]
+
+  """All values that are not contained in given list."""
+  image_not_in: [String!]
+
+  """All values less than the given value."""
+  image_lt: String
+
+  """All values less than or equal the given value."""
+  image_lte: String
+
+  """All values greater than the given value."""
+  image_gt: String
+
+  """All values greater than or equal the given value."""
+  image_gte: String
+
+  """All values containing the given string."""
+  image_contains: String
+
+  """All values not containing the given string."""
+  image_not_contains: String
+
+  """All values starting with the given string."""
+  image_starts_with: String
+
+  """All values not starting with the given string."""
+  image_not_starts_with: String
+
+  """All values ending with the given string."""
+  image_ends_with: String
+
+  """All values not ending with the given string."""
+  image_not_ends_with: String
   updatedAt: DateTime
 
   """All values that are not equal to given value."""

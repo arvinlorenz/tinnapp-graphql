@@ -51,10 +51,18 @@ const Mutation = {
     },
     async deleteUser(parent, args, { prisma, request }, info) {
         const userId = getUserId(request)
+        const user = await prisma.query.user(
+            {
+             where:{
+                 id:userId
+             }
+            } 
+         )
+        const accountType = user.accountType
 
         return prisma.mutation.deleteUser({
             where: {
-                id: userId
+                id: args.id
             }
         }, info)
     },
@@ -68,6 +76,9 @@ const Mutation = {
             } 
          )
         const accountType = user.accountType
+        if(!exists || accountType !== "PROVINCIAL_DISTRIBUTOR"){
+            throw new Error("Not allowed to delete user")
+        }
         if (args.id) {     
             const exists = await prisma.exists.User({
                 id: args.id
@@ -355,7 +366,9 @@ const Mutation = {
         // create product
         let opArgsProduct = {}
         opArgsProduct.data = {
-            ...args.data
+            ...args.data,
+            image: args.data.image.toString()
+
         }
         opArgsProduct.data.category = {
             connect:{
@@ -368,7 +381,7 @@ const Mutation = {
             }
         }
 
-      
+        console.log(opArgsProduct)
         return prisma.mutation.createProduct(opArgsProduct, info)
     },
 
