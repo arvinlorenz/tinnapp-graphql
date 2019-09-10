@@ -111,6 +111,7 @@ const Mutation = {
     },
 
     async createOrder(parent, args, { prisma, request }, info){
+        console.log(args.data);
         const userId = getUserId(request)
         let totalPrice = args.data.shippingFee || 0;
     
@@ -158,6 +159,7 @@ const Mutation = {
             })
         }
         opArgs.data.totalPrice = totalPrice;
+        console.log(totalPrice);
         delete opArgs.data.buyerAccount;
        
        return prisma.mutation.createOrder(opArgs,info)

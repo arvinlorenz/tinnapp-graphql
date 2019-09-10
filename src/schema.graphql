@@ -79,7 +79,7 @@ input CreateOrderInput{
     isPaid: Boolean
     shippingFee: Float
     buyer: ID!
-    buyerAccount: String!
+    buyerAccount: String
     products: [OrderedProductInput!]!
 }
 input UpdateOrderInput{
