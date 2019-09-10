@@ -369,8 +369,10 @@ const Mutation = {
         let opArgsProduct = {}
         opArgsProduct.data = {
             ...args.data,
-            image: args.data.image.toString()
+        }
 
+        if (args.data.image) {
+            opArgsProduct.data.image = args.data.image.toString()
         }
         opArgsProduct.data.category = {
             connect:{
